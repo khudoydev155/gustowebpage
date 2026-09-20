@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --color-espresso-950: #060504;
+  --color-espresso-900: #0C0A08;
+  --color-espresso-850: #13100D;
+  --color-espresso-800: #1C1713;
+  --color-espresso-700: #29231D;
+  --color-espresso-600: #3E362D;
+
+  --color-cream-50: #FCFAF7;
+  --color-cream-100: #F5F1EA;
+  --color-cream-200: #EAE3D5;
+  --color-cream-300: #D5C9B3;
+
+  --color-bronze-300: #DDB475;
+  --color-bronze-400: #C59853;
+  --color-bronze-500: #A87A38;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    background-color: #0C0A08;
+    color: #F5F1EA;
+    overflow-x: hidden;
+    max-width: 100vw;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  h1, h2, h3, h4, .font-serif {
+    font-family: var(--font-serif);
+  }
+}
+
+/* Touch-optimized horizontal scrollbar hiding */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Luxury grain effect and refined subtle scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0C0A08;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #29231D;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3E362D;
+}

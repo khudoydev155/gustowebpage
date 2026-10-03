@@ -1,6 +1,6 @@
 # Gusto Coffee
 
-Gusto Coffee Bar — Tashkent viloyati, Xonqa tumanidagi qahvaxona uchun
+Gusto Coffee Bar — Xorazim viloyat, Xonqa tumanidagi qahvaxona uchun
 rasmiy marketing sayti. Coffee worth slowing down for.
 
 ## Stack

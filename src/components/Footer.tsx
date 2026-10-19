@@ -26,7 +26,7 @@ export const Footer: React.FC = () => {
           <div className="lg:col-span-5 flex flex-col justify-between">
             <div>
               <div className="flex items-center gap-2.5 sm:gap-3.5 mb-2 sm:mb-3">
-                <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-full overflow-hidden border border-[#C5A059]/60 shadow-[0_0_16px_rgba(197,160,89,0.2)] bg-[#0C0A08] shrink-0">
+                <div className="w-8 h-8 sm:w-11 sm:h-11 shrink-0 flex items-center justify-center filter drop-shadow-[0_0_10px_rgba(197,160,89,0.25)]">
                   <img
                     src="/logo-mark.svg"
                     alt="Gusto Coffee Medallion"

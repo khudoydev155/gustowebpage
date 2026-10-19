@@ -71,11 +71,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenReservation, onOpenFavorit
           aria-label="Gusto Coffee Home"
           className="group flex items-center gap-2.5 sm:gap-3.5 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C59853]"
         >
-          <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden shrink-0 border border-[#C5A059]/40 group-hover:border-[#C5A059] transition-all duration-300 shadow-[0_0_12px_rgba(197,160,89,0.15)] group-hover:shadow-[0_0_18px_rgba(197,160,89,0.3)] bg-[#0C0A08]">
+          <div className="relative w-8 h-8 sm:w-10 sm:h-10 shrink-0 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
             <img
               src="/logo-mark.svg"
               alt="Gusto Coffee Brand Logo"
-              className="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(197,160,89,0.25)]"
               width="40"
               height="40"
               loading="eager"

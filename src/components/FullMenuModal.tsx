@@ -140,7 +140,7 @@ export const FullMenuModal: React.FC<FullMenuModalProps> = ({
             <div className="p-4 sm:p-8 border-b border-[#241E18] shrink-0 bg-[#14100C]/90">
               <div className="flex items-start justify-between gap-3 mb-3.5 sm:mb-6">
                 <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full overflow-hidden border border-[#C59853]/60 shadow-[0_0_14px_rgba(197,160,89,0.2)] bg-[#0C0A08] shrink-0">
+                  <div className="w-9 h-9 sm:w-12 sm:h-12 shrink-0 flex items-center justify-center filter drop-shadow-[0_0_10px_rgba(197,160,89,0.25)]">
                     <img src="/logo-mark.svg" alt="Gusto Brand Medallion" className="w-full h-full object-contain" width="48" height="48" />
                   </div>
                   <div>

@@ -207,7 +207,7 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
         {!submitted ? (
           <div>
             <div className="flex items-center gap-3 mb-3 sm:mb-4">
-              <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full overflow-hidden border border-[#C5A059]/60 shadow-[0_0_12px_rgba(197,160,89,0.2)] bg-[#0C0A08] shrink-0">
+              <div className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 flex items-center justify-center filter drop-shadow-[0_0_8px_rgba(197,160,89,0.25)]">
                 <img src="/logo-mark.svg" alt="Gusto Logo" className="w-full h-full object-contain" width="44" height="44" />
               </div>
               <div>

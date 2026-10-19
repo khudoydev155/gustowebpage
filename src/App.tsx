@@ -33,8 +33,28 @@ export default function App() {
   };
 
   React.useEffect(() => {
-    if (window.location.hash) {
-      const targetId = window.location.hash.replace('#', '');
+    const hash = window.location.hash.toLowerCase();
+    const searchParams = new URLSearchParams(window.location.search);
+    const shouldOpenFullMenu =
+      hash === '#menu' ||
+      hash === '#full-menu' ||
+      hash === '#fullmenu' ||
+      searchParams.get('menu') === 'open' ||
+      searchParams.get('open') === 'menu' ||
+      searchParams.get('fullmenu') === '1';
+
+    if (shouldOpenFullMenu) {
+      // Direct QR code scan or deep-link: open Full Menu modal immediately
+      const timer = setTimeout(() => {
+        setFullCarteOpen(true);
+        const el = document.getElementById('menu');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    } else if (hash) {
+      const targetId = hash.replace('#', '');
       const timer = setTimeout(() => {
         const el = document.getElementById(targetId);
         if (el) {
@@ -46,6 +66,25 @@ export default function App() {
       window.scrollTo(0, 0);
     }
   }, []);
+
+  React.useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.toLowerCase();
+      if (hash === '#menu' || hash === '#full-menu' || hash === '#fullmenu') {
+        setFullCarteOpen(true);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const handleCloseFullMenu = () => {
+    setFullCarteOpen(false);
+    const hash = window.location.hash.toLowerCase();
+    if (hash === '#menu' || hash === '#full-menu' || hash === '#fullmenu') {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  };
 
   const handleOpenReservation = (locationId?: string) => {
     setReservationLocationId(locationId);
@@ -116,9 +155,9 @@ export default function App() {
 
       <FullMenuModal
         isOpen={fullCarteOpen}
-        onClose={() => setFullCarteOpen(false)}
+        onClose={handleCloseFullMenu}
         onReserveTable={() => {
-          setFullCarteOpen(false);
+          handleCloseFullMenu();
           handleOpenReservation();
         }}
       />

@@ -13,8 +13,10 @@ import {
   Sparkles,
   Maximize2,
   MapPin,
+  Heart,
 } from 'lucide-react';
 import { useLanguage } from '../i18n';
+import { useFavorites } from '../utils/useFavorites';
 
 interface MenuPreviewProps {
   onOpenFullCarte: () => void;
@@ -61,7 +63,10 @@ const CATEGORY_IMAGES: Record<string, string> = {
 
 export const MenuPreview: React.FC<MenuPreviewProps> = ({ onOpenFullCarte }) => {
   const { language, t, localize } = useLanguage();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const carouselRef = useRef<HTMLDivElement>(null);
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const isFirstMount = useRef(true);
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -114,13 +119,20 @@ export const MenuPreview: React.FC<MenuPreviewProps> = ({ onOpenFullCarte }) => 
     };
   }, [orderedCategories.length]);
 
-  // Keep active category tab in view within the pill bar
+  // Keep active category tab in view within the pill bar (without scrolling the document window)
   useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
     const activeCatId = orderedCategories[activeCategoryIndex]?.id;
-    if (activeCatId) {
+    const container = tabsContainerRef.current;
+    if (activeCatId && container) {
       const activeTabEl = document.getElementById(`showroom-cat-tab-${activeCatId}`);
       if (activeTabEl) {
-        activeTabEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        const targetLeft =
+          activeTabEl.offsetLeft - container.offsetWidth / 2 + activeTabEl.offsetWidth / 2;
+        container.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
       }
     }
   }, [activeCategoryIndex, orderedCategories]);
@@ -155,6 +167,22 @@ export const MenuPreview: React.FC<MenuPreviewProps> = ({ onOpenFullCarte }) => 
       if (outroCard) {
         outroCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
       }
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      handlePrev();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      handleNext();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      scrollToCategory(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      scrollToCategory(orderedCategories.length - 1);
     }
   };
 
@@ -269,13 +297,21 @@ export const MenuPreview: React.FC<MenuPreviewProps> = ({ onOpenFullCarte }) => 
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1.5 scrollbar-none scroll-smooth -mx-1 px-1">
+          <div
+            ref={tabsContainerRef}
+            role="tablist"
+            aria-label={t('menu.categoriesAria', 'Menyu toifalari')}
+            className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1.5 scrollbar-none scroll-smooth -mx-1 px-1"
+          >
             {orderedCategories.map((cat, idx) => {
               const isActive = idx === activeCategoryIndex;
               const IconComponent = CATEGORY_ICONS[cat.id] || Coffee;
               return (
                 <button
                   key={cat.id}
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-controls={`showroom-deck-${cat.id}`}
                   onClick={() => scrollToCategory(idx)}
                   id={`showroom-cat-tab-${cat.id}`}
                   className={`min-h-[40px] whitespace-nowrap px-3.5 sm:px-4 py-1.5 text-xs tracking-[0.12em] uppercase rounded-full transition-all duration-200 flex items-center gap-2 shrink-0 ${
@@ -301,10 +337,18 @@ export const MenuPreview: React.FC<MenuPreviewProps> = ({ onOpenFullCarte }) => 
           </div>
         </div>
 
-        {/* Horizontal Carte Carousel Showcase (Native smooth horizontal scroll, safe for vertical page scrolling) */}
+        {/* Horizontal Carte Carousel Showcase (Accessible via Left/Right Arrow keys) */}
         <div
           ref={carouselRef}
-          className="flex items-stretch gap-4 sm:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none pb-4 pt-1 touch-pan-x"
+          tabIndex={0}
+          role="region"
+          aria-roledescription="carousel"
+          aria-label={t(
+            'menu.carouselAria',
+            'Menyu toifalari karuseli, boshqarish uchun chap va o‘ng strelkalardan foydalaning'
+          )}
+          onKeyDown={handleKeyDown}
+          className="flex items-stretch gap-4 sm:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none pb-4 pt-1 touch-pan-x focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C59853]/70 focus-visible:ring-offset-4 focus-visible:ring-offset-[#0C0A08] rounded-sm"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {orderedCategories.map((cat, catIdx) => {
@@ -365,9 +409,37 @@ export const MenuPreview: React.FC<MenuPreviewProps> = ({ onOpenFullCarte }) => 
                             <h5 className="font-serif text-sm sm:text-base text-[#FCFAF7] group-hover/item:text-[#DDB475] transition-colors font-medium truncate">
                               {localize(item.name)}
                             </h5>
-                            <span className="font-serif text-xs sm:text-sm text-[#E6C387] shrink-0 font-semibold px-2 py-0.5 rounded-sm bg-[#1A140E] border border-[#2A2117]">
-                              {item.price}
-                            </span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleFavorite(item.id);
+                                }}
+                                aria-label={
+                                  isFavorite(item.id)
+                                    ? t('common.removeFromFavorites', "Sevimlilardan o'chirish")
+                                    : t('common.addToFavorites', "Sevimlilarga qo'shish")
+                                }
+                                title={
+                                  isFavorite(item.id)
+                                    ? t('common.removeFromFavorites', "Sevimlilardan o'chirish")
+                                    : t('common.addToFavorites', "Sevimlilarga qo'shish")
+                                }
+                                className="min-w-[28px] min-h-[28px] flex items-center justify-center rounded-full text-[#D5C9B3]/40 hover:text-[#DDB475] transition-colors focus:outline-none"
+                              >
+                                <Heart
+                                  className={`w-3.5 h-3.5 ${
+                                    isFavorite(item.id)
+                                      ? 'text-[#DDB475] fill-[#DDB475]'
+                                      : 'text-[#D5C9B3]/40'
+                                  }`}
+                                />
+                              </button>
+                              <span className="font-serif text-xs sm:text-sm text-[#E6C387] shrink-0 font-semibold px-2 py-0.5 rounded-sm bg-[#1A140E] border border-[#2A2117]">
+                                {item.price}
+                              </span>
+                            </div>
                           </div>
 
                           <p className="text-xs text-[#E0D5C1] font-normal line-clamp-1 leading-relaxed mb-1.5">

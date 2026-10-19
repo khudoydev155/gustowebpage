@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Printer, Search, Coffee, Utensils } from 'lucide-react';
+import { X, Printer, Search, Coffee, Utensils, Heart } from 'lucide-react';
 import { MENU_ITEMS, MENU_CATEGORIES } from '../data/coffeeData';
 import { useLanguage } from '../i18n';
+import { useFavorites } from '../utils/useFavorites';
 
 interface FullMenuModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export const FullMenuModal: React.FC<FullMenuModalProps> = ({
   onReserveTable,
 }) => {
   const { language, t, localize } = useLanguage();
+  const { favorites, isFavorite, toggleFavorite } = useFavorites();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
@@ -53,6 +55,37 @@ export const FullMenuModal: React.FC<FullMenuModalProps> = ({
   const filteredCategories = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
 
+    if (selectedCategory === 'favorites') {
+      const favItems = MENU_ITEMS.filter((item) => {
+        if (!isFavorite(item.id)) return false;
+        if (!query) return true;
+
+        const name = (localize(item.name) || '').toLowerCase();
+        const desc = (localize(item.description) || '').toLowerCase();
+        const origin = (localize(item.originOrStyle) || '').toLowerCase();
+        return name.includes(query) || desc.includes(query) || origin.includes(query);
+      });
+
+      if (favItems.length === 0) return [];
+
+      return [
+        {
+          id: 'favorites' as any,
+          name: {
+            uz: 'Sevimli taom va ichimliklar',
+            ru: 'Избранные блюда и напитки',
+            en: 'Favorite Items & Beverages',
+          },
+          shortLabel: {
+            uz: 'Sevimlilar',
+            ru: 'Избранное',
+            en: 'Favorites',
+          },
+          items: favItems,
+        },
+      ];
+    }
+
     return MENU_CATEGORIES.map((cat) => {
       if (selectedCategory !== 'all' && cat.id !== selectedCategory) {
         return null;
@@ -75,7 +108,7 @@ export const FullMenuModal: React.FC<FullMenuModalProps> = ({
         items,
       };
     }).filter(Boolean);
-  }, [searchQuery, selectedCategory, localize]);
+  }, [searchQuery, selectedCategory, localize, isFavorite]);
 
   return (
     <AnimatePresence>
@@ -107,7 +140,7 @@ export const FullMenuModal: React.FC<FullMenuModalProps> = ({
             <div className="p-4 sm:p-8 border-b border-[#241E18] shrink-0 bg-[#14100C]/90">
               <div className="flex items-start justify-between gap-3 mb-3.5 sm:mb-6">
                 <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full overflow-hidden border border-[#C5A059]/60 shadow-[0_0_14px_rgba(197,160,89,0.2)] bg-[#0C0A08] shrink-0">
+                  <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full overflow-hidden border border-[#C59853]/60 shadow-[0_0_14px_rgba(197,160,89,0.2)] bg-[#0C0A08] shrink-0">
                     <img src="/logo-mark.svg" alt="Gusto Brand Medallion" className="w-full h-full object-contain" width="48" height="48" />
                   </div>
                   <div>
@@ -181,6 +214,24 @@ export const FullMenuModal: React.FC<FullMenuModalProps> = ({
                   >
                     {t('menu.allCategories', 'Barchasi')}
                   </button>
+
+                  <button
+                    onClick={() => setSelectedCategory('favorites')}
+                    className={`min-h-[36px] px-3.5 py-1.5 rounded-full text-[11px] whitespace-nowrap uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${
+                      selectedCategory === 'favorites'
+                        ? 'bg-[#F5F1EA] text-[#0C0A08] font-semibold'
+                        : 'bg-[#18130E] text-[#D5C9B3]/70 hover:text-[#FCFAF7] border border-[#241E18]'
+                    }`}
+                  >
+                    <Heart className={`w-3 h-3 ${favorites.length > 0 ? 'text-[#DDB475] fill-[#DDB475]' : ''}`} />
+                    <span>{t('common.favorites', 'Sevimlilar')}</span>
+                    {favorites.length > 0 && (
+                      <span className="text-[10px] px-1.5 rounded-full bg-[#C59853]/20 text-[#DDB475]">
+                        {favorites.length}
+                      </span>
+                    )}
+                  </button>
+
                   {MENU_CATEGORIES.map((cat) => (
                     <button
                       key={cat.id}
@@ -202,13 +253,24 @@ export const FullMenuModal: React.FC<FullMenuModalProps> = ({
             <div className="p-4 sm:p-8 overflow-y-auto space-y-8 sm:space-y-10 flex-1 scroll-smooth">
               {filteredCategories.length === 0 ? (
                 <div className="text-center py-12 sm:py-16">
-                  <Coffee className="w-10 h-10 text-[#C59853]/40 mx-auto mb-3" />
-                  <p className="text-sm text-[#D5C9B3]/70 font-light">
-                    {t(
-                      'menuModal.noResults',
-                      "Kechirasiz, so'rovingiz bo'yicha hech qanday taom topilmadi."
-                    )}
-                  </p>
+                  {selectedCategory === 'favorites' ? (
+                    <>
+                      <Heart className="w-10 h-10 text-[#C59853]/40 mx-auto mb-3" />
+                      <p className="text-sm text-[#D5C9B3]/70 font-light">
+                        {t('common.noFavorites', "Hozircha sevimli taomlar yo'q")}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Coffee className="w-10 h-10 text-[#C59853]/40 mx-auto mb-3" />
+                      <p className="text-sm text-[#D5C9B3]/70 font-light">
+                        {t(
+                          'menuModal.noResults',
+                          "Kechirasiz, so'rovingiz bo'yicha hech qanday taom topilmadi."
+                        )}
+                      </p>
+                    </>
+                  )}
                   <button
                     onClick={() => {
                       setSearchQuery('');
@@ -259,9 +321,37 @@ export const FullMenuModal: React.FC<FullMenuModalProps> = ({
                                   <h4 className="font-serif text-sm sm:text-base text-[#FCFAF7] font-normal">
                                     {localize(item.name)}
                                   </h4>
-                                  <span className="font-serif text-xs sm:text-sm text-[#DDB475] font-medium shrink-0">
-                                    {item.price}
-                                  </span>
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleFavorite(item.id);
+                                      }}
+                                      aria-label={
+                                        isFavorite(item.id)
+                                          ? t('common.removeFromFavorites', "Sevimlilardan o'chirish")
+                                          : t('common.addToFavorites', "Sevimlilarga qo'shish")
+                                      }
+                                      title={
+                                        isFavorite(item.id)
+                                          ? t('common.removeFromFavorites', "Sevimlilardan o'chirish")
+                                          : t('common.addToFavorites', "Sevimlilarga qo'shish")
+                                      }
+                                      className="min-w-[28px] min-h-[28px] flex items-center justify-center rounded-full text-[#D5C9B3]/40 hover:text-[#DDB475] transition-colors focus:outline-none"
+                                    >
+                                      <Heart
+                                        className={`w-3.5 h-3.5 ${
+                                          isFavorite(item.id)
+                                            ? 'text-[#DDB475] fill-[#DDB475]'
+                                            : 'text-[#D5C9B3]/40'
+                                        }`}
+                                      />
+                                    </button>
+                                    <span className="font-serif text-xs sm:text-sm text-[#DDB475] font-medium">
+                                      {item.price}
+                                    </span>
+                                  </div>
                                 </div>
                                 <p className="text-[11px] text-[#D5C9B3]/75 font-light leading-relaxed mb-2 line-clamp-2">
                                   {localize(item.description)}

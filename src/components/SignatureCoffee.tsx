@@ -1,8 +1,9 @@
 import React from 'react';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles, Heart } from 'lucide-react';
 import { SIGNATURE_PRODUCTS } from '../data/coffeeData';
 import { SignatureProduct } from '../types';
 import { useLanguage } from '../i18n';
+import { useFavorites } from '../utils/useFavorites';
 
 interface SignatureCoffeeProps {
   onSelectProduct: (product: SignatureProduct) => void;
@@ -14,6 +15,7 @@ export const SignatureCoffee: React.FC<SignatureCoffeeProps> = ({
   onExploreFullMenu,
 }) => {
   const { language, t, localize } = useLanguage();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [featuredProduct, ...secondaryProducts] = SIGNATURE_PRODUCTS;
 
   const getNotes = (product: SignatureProduct): string[] => {
@@ -79,15 +81,42 @@ export const SignatureCoffee: React.FC<SignatureCoffeeProps> = ({
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#13100D] via-transparent to-black/20" />
 
-              {/* Harvest / Signature Badge */}
-              {featuredProduct.badge && (
-                <div className="absolute top-4 sm:top-5 left-4 sm:left-5">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#0C0A08]/85 backdrop-blur-md border border-[#C59853]/50 text-[#DDB475] text-[10px] font-sans uppercase tracking-[0.2em]">
+              {/* Top Bar Badges & Favorite */}
+              <div className="absolute top-4 sm:top-5 left-4 sm:left-5 right-4 sm:right-5 flex items-center justify-between pointer-events-none">
+                {featuredProduct.badge ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#0C0A08]/85 backdrop-blur-md border border-[#C59853]/50 text-[#DDB475] text-[10px] font-sans uppercase tracking-[0.2em] pointer-events-auto">
                     <Sparkles className="w-3 h-3" />
                     {localize(featuredProduct.badge)}
                   </span>
-                </div>
-              )}
+                ) : <span />}
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite(featuredProduct.id);
+                  }}
+                  aria-label={
+                    isFavorite(featuredProduct.id)
+                      ? t('common.removeFromFavorites', "Sevimlilardan o'chirish")
+                      : t('common.addToFavorites', "Sevimlilarga qo'shish")
+                  }
+                  title={
+                    isFavorite(featuredProduct.id)
+                      ? t('common.removeFromFavorites', "Sevimlilardan o'chirish")
+                      : t('common.addToFavorites', "Sevimlilarga qo'shish")
+                  }
+                  className="w-9 h-9 rounded-full bg-[#0C0A08]/85 backdrop-blur-md border border-[#29231D] hover:border-[#C59853] text-[#D5C9B3] hover:text-[#DDB475] transition-colors flex items-center justify-center pointer-events-auto shadow-md"
+                >
+                  <Heart
+                    className={`w-4 h-4 ${
+                      isFavorite(featuredProduct.id)
+                        ? 'text-[#DDB475] fill-[#DDB475]'
+                        : 'text-[#D5C9B3]/70'
+                    }`}
+                  />
+                </button>
+              </div>
 
               {/* Price Tag */}
               <div className="absolute bottom-4 sm:bottom-5 right-4 sm:right-5">
@@ -163,9 +192,37 @@ export const SignatureCoffee: React.FC<SignatureCoffeeProps> = ({
                     <span className="text-[10px] uppercase tracking-[0.2em] text-[#C59853]">
                       {localize(product.subtitle)}
                     </span>
-                    <span className="font-serif text-sm text-[#DDB475]">
-                      {product.price}
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(product.id);
+                        }}
+                        aria-label={
+                          isFavorite(product.id)
+                            ? t('common.removeFromFavorites', "Sevimlilardan o'chirish")
+                            : t('common.addToFavorites', "Sevimlilarga qo'shish")
+                        }
+                        title={
+                          isFavorite(product.id)
+                            ? t('common.removeFromFavorites', "Sevimlilardan o'chirish")
+                            : t('common.addToFavorites', "Sevimlilarga qo'shish")
+                        }
+                        className="w-7 h-7 rounded-full text-[#D5C9B3]/40 hover:text-[#DDB475] flex items-center justify-center transition-colors"
+                      >
+                        <Heart
+                          className={`w-3.5 h-3.5 ${
+                            isFavorite(product.id)
+                              ? 'text-[#DDB475] fill-[#DDB475]'
+                              : 'text-[#D5C9B3]/40'
+                          }`}
+                        />
+                      </button>
+                      <span className="font-serif text-sm text-[#DDB475]">
+                        {product.price}
+                      </span>
+                    </div>
                   </div>
 
                   <h4 className="font-serif text-xl sm:text-2xl text-[#FCFAF7] group-hover:text-[#DDB475] transition-colors font-normal mb-2">

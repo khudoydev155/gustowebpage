@@ -303,6 +303,12 @@ export interface TranslationDictionary {
     fivePlusGuests: string;
     nameLabel: string;
     namePlaceholder: string;
+    tomorrow?: string;
+    customDate?: string;
+    selectTime?: string;
+    phoneError?: string;
+    nameError?: string;
+    sending?: string;
     phoneLabel: string;
     phonePlaceholder: string;
     confirmBtn: string;
@@ -331,5 +337,10 @@ export interface TranslationDictionary {
     hours: string;
     openDaily: string;
     menu: string;
+    favorites?: string;
+    addToFavorites?: string;
+    removeFromFavorites?: string;
+    noFavorites?: string;
   };
 }
+

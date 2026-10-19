@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, CheckCircle2, Send, ExternalLink, MessageSquare } from 'lucide-react';
+import { X, CheckCircle2, Send, ExternalLink, MessageSquare, Calendar, Clock, AlertCircle } from 'lucide-react';
 import { CAFE_LOCATIONS } from '../data/coffeeData';
 import { BRAND_CONTACTS, sendReservationToTelegram, generateTelegramBookingText } from '../data/brandInfo';
 import { useLanguage } from '../i18n';
@@ -8,6 +8,57 @@ interface TableReservationModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialLocationId?: string;
+}
+
+const TIME_SLOTS = [
+  '08:00 AM',
+  '09:00 AM',
+  '10:00 AM',
+  '11:00 AM',
+  '12:00 PM',
+  '01:00 PM',
+  '02:00 PM',
+  '03:00 PM',
+  '04:00 PM',
+  '05:00 PM',
+  '06:00 PM',
+  '07:00 PM',
+  '08:00 PM',
+  '09:00 PM',
+  '10:00 PM',
+  '11:00 PM',
+  '12:00 AM',
+  '01:00 AM',
+];
+
+function formatUzPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, '');
+  if (!digits) return '+998 ';
+  let core = digits;
+  if (core.startsWith('998')) {
+    core = core.slice(3);
+  }
+  core = core.slice(0, 9);
+  let formatted = '+998';
+  if (core.length > 0) {
+    formatted += ' (' + core.slice(0, 2);
+    if (core.length >= 2) formatted += ') ';
+  }
+  if (core.length > 2) {
+    formatted += core.slice(2, 5);
+  }
+  if (core.length > 5) {
+    formatted += '-' + core.slice(5, 7);
+  }
+  if (core.length > 7) {
+    formatted += '-' + core.slice(7, 9);
+  }
+  return formatted;
+}
+
+function isValidUzPhone(formatted: string): boolean {
+  const digits = formatted.replace(/\D/g, '');
+  return digits.length === 12 && digits.startsWith('998');
 }
 
 export const TableReservationModal: React.FC<TableReservationModalProps> = ({
@@ -20,8 +71,22 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
     initialLocationId || CAFE_LOCATIONS[0].id
   );
   const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [date, setDate] = useState('Bugun');
+  const [nameTouched, setNameTouched] = useState(false);
+  const [nameError, setNameError] = useState(false);
+
+  const [phone, setPhone] = useState('+998 ');
+  const [phoneTouched, setPhoneTouched] = useState(false);
+  const [phoneError, setPhoneError] = useState(false);
+
+  // Date selection states: 'today' | 'tomorrow' | 'custom'
+  const todayObj = new Date();
+  const todayIso = todayObj.toISOString().split('T')[0];
+  const tomorrowObj = new Date(Date.now() + 86400000);
+  const tomorrowIso = tomorrowObj.toISOString().split('T')[0];
+
+  const [dateType, setDateType] = useState<'today' | 'tomorrow' | 'custom'>('today');
+  const [customDate, setCustomDate] = useState(todayIso);
+
   const [time, setTime] = useState('11:00 AM');
   const [guests, setGuests] = useState('2');
   const [experience, setExperience] = useState('slowCoffee');
@@ -47,15 +112,40 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
   const currentExpLabel = experiences.find((e) => e.id === experience)?.label || experience;
   const currentLocationName = CAFE_LOCATIONS.find((l) => l.id === selectedLocation)?.name || BRAND_CONTACTS.name;
 
+  const getEffectiveDate = (): string => {
+    if (dateType === 'today') {
+      return `${t('reserveModal.today', 'Bugun')} (${todayIso})`;
+    }
+    if (dateType === 'tomorrow') {
+      return `${t('reserveModal.tomorrow', 'Ertaga')} (${tomorrowIso})`;
+    }
+    return customDate || todayIso;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const isPhoneValid = isValidUzPhone(phone);
+    const isNameValid = name.trim().length >= 2;
+
+    setNameTouched(true);
+    setPhoneTouched(true);
+    setNameError(!isNameValid);
+    setPhoneError(!isPhoneValid);
+
+    if (!isPhoneValid || !isNameValid) {
+      return;
+    }
+
     setIsSending(true);
+
+    const bookingDate = getEffectiveDate();
 
     try {
       const result = await sendReservationToTelegram({
-        name,
+        name: name.trim(),
         phone,
-        date,
+        date: bookingDate,
         time,
         guests,
         experience: currentExpLabel,
@@ -66,22 +156,27 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
       setAutoDeliveryFailed(true);
     } finally {
       setIsSending(false);
-      // Always reach the confirmation view — the reservation intent is
-      // valid either way, and the manual "open in bot" / "share" actions
-      // below are the honest backup when automatic delivery didn't work.
       setSubmitted(true);
     }
   };
 
   const handleReset = () => {
     setSubmitted(false);
+    setName('');
+    setPhone('+998 ');
+    setNameTouched(false);
+    setPhoneTouched(false);
+    setNameError(false);
+    setPhoneError(false);
     onClose();
   };
 
+  const effectiveBookingDate = getEffectiveDate();
+
   const telegramShareText = generateTelegramBookingText({
-    name,
+    name: name.trim(),
     phone,
-    date,
+    date: effectiveBookingDate,
     time,
     guests,
     experience: currentExpLabel,
@@ -135,7 +230,7 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
               )}
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5" noValidate>
               {/* Location Select */}
               <div>
                 <label className="block text-[10px] uppercase tracking-[0.2em] text-[#D5C9B3]/70 mb-2 font-sans">
@@ -184,36 +279,84 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
                 </div>
               </div>
 
-              {/* Date, Time, Guests */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-[10px] uppercase tracking-[0.2em] text-[#D5C9B3]/70 mb-1.5 font-sans">
-                    {t('reserveModal.dateLabel', 'Sana')}
-                  </label>
-                  <div className="relative">
+              {/* Date Presets and Custom Date Picker */}
+              <div>
+                <label className="block text-[10px] uppercase tracking-[0.2em] text-[#D5C9B3]/70 mb-2 font-sans">
+                  {t('reserveModal.dateLabel', 'Sana')}
+                </label>
+                <div className="grid grid-cols-3 gap-2 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setDateType('today')}
+                    className={`py-2 px-2 text-center border rounded-sm text-xs font-sans transition-all min-h-[42px] flex items-center justify-center gap-1.5 ${
+                      dateType === 'today'
+                        ? 'border-[#C59853] bg-[#C59853]/15 text-[#DDB475] font-medium'
+                        : 'border-[#29231D] bg-[#0E0C09] text-[#D5C9B3]/70 hover:border-[#3E362D]'
+                    }`}
+                  >
+                    <span>{t('reserveModal.today', 'Bugun')}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setDateType('tomorrow')}
+                    className={`py-2 px-2 text-center border rounded-sm text-xs font-sans transition-all min-h-[42px] flex items-center justify-center gap-1.5 ${
+                      dateType === 'tomorrow'
+                        ? 'border-[#C59853] bg-[#C59853]/15 text-[#DDB475] font-medium'
+                        : 'border-[#29231D] bg-[#0E0C09] text-[#D5C9B3]/70 hover:border-[#3E362D]'
+                    }`}
+                  >
+                    <span>{t('reserveModal.tomorrow', 'Ertaga')}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setDateType('custom')}
+                    className={`py-2 px-2 text-center border rounded-sm text-xs font-sans transition-all min-h-[42px] flex items-center justify-center gap-1.5 ${
+                      dateType === 'custom'
+                        ? 'border-[#C59853] bg-[#C59853]/15 text-[#DDB475] font-medium'
+                        : 'border-[#29231D] bg-[#0E0C09] text-[#D5C9B3]/70 hover:border-[#3E362D]'
+                    }`}
+                  >
+                    <Calendar className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">{t('reserveModal.customDate', 'Boshqa')}</span>
+                  </button>
+                </div>
+
+                {dateType === 'custom' && (
+                  <div className="relative mt-2">
                     <input
-                      type="text"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      placeholder={t('reserveModal.datePlaceholder', 'Bugun')}
-                      className="w-full min-h-[44px] bg-[#0E0C09] border border-[#29231D] rounded-sm px-3 py-2 text-xs text-[#F5F1EA] focus:outline-none focus:border-[#C59853]"
+                      type="date"
+                      min={todayIso}
+                      value={customDate}
+                      onChange={(e) => setCustomDate(e.target.value)}
+                      aria-label={t('reserveModal.dateLabel', 'Sana')}
+                      className="w-full min-h-[44px] bg-[#0E0C09] border border-[#C59853] rounded-sm px-3.5 py-2 text-xs text-[#F5F1EA] focus:outline-none [color-scheme:dark]"
                       required
                     />
                   </div>
-                </div>
+                )}
+              </div>
 
+              {/* Time and Guests Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] uppercase tracking-[0.2em] text-[#D5C9B3]/70 mb-1.5 font-sans">
-                    {t('reserveModal.timeLabel', 'Vaqt')}
+                  <label className="block text-[10px] uppercase tracking-[0.2em] text-[#D5C9B3]/70 mb-1.5 font-sans flex items-center gap-1.5">
+                    <Clock className="w-3 h-3 text-[#C59853]" />
+                    <span>{t('reserveModal.timeLabel', 'Vaqt')} (08:00 — 02:00)</span>
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={time}
                     onChange={(e) => setTime(e.target.value)}
-                    placeholder="11:00 AM"
-                    className="w-full min-h-[44px] bg-[#0E0C09] border border-[#29231D] rounded-sm px-3 py-2 text-xs text-[#F5F1EA] focus:outline-none focus:border-[#C59853]"
-                    required
-                  />
+                    aria-label={t('reserveModal.timeLabel', 'Vaqt')}
+                    className="w-full min-h-[44px] bg-[#0E0C09] border border-[#29231D] rounded-sm px-3 py-2 text-xs text-[#F5F1EA] focus:outline-none focus:border-[#C59853] cursor-pointer"
+                  >
+                    {TIME_SLOTS.map((slot) => (
+                      <option key={slot} value={slot} className="bg-[#13100D] text-[#F5F1EA]">
+                        {slot}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -223,10 +366,11 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
                   <select
                     value={guests}
                     onChange={(e) => setGuests(e.target.value)}
-                    className="w-full min-h-[44px] bg-[#0E0C09] border border-[#29231D] rounded-sm px-3 py-2 text-xs text-[#F5F1EA] focus:outline-none focus:border-[#C59853]"
+                    aria-label={t('reserveModal.partyLabel', 'Mehmonlar soni')}
+                    className="w-full min-h-[44px] bg-[#0E0C09] border border-[#29231D] rounded-sm px-3 py-2 text-xs text-[#F5F1EA] focus:outline-none focus:border-[#C59853] cursor-pointer"
                   >
                     {guestOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
+                      <option key={opt.value} value={opt.value} className="bg-[#13100D] text-[#F5F1EA]">
                         {opt.label}
                       </option>
                     ))}
@@ -234,34 +378,75 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
                 </div>
               </div>
 
-              {/* Guest Details */}
+              {/* Guest Details with Validation */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 <div>
                   <label className="block text-[10px] uppercase tracking-[0.2em] text-[#D5C9B3]/70 mb-1.5 font-sans">
-                    {t('reserveModal.nameLabel', 'Ismingiz')}
+                    {t('reserveModal.nameLabel', 'Ismingiz')} *
                   </label>
                   <input
                     type="text"
+                    id="reservation-name-input"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Masalan: Alisher"
-                    className="w-full min-h-[44px] bg-[#0E0C09] border border-[#29231D] rounded-sm px-3.5 py-2.5 text-xs text-[#F5F1EA] placeholder-[#D5C9B3]/30 focus:outline-none focus:border-[#C59853]"
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      if (nameTouched) {
+                        setNameError(e.target.value.trim().length < 2);
+                      }
+                    }}
+                    onBlur={() => {
+                      setNameTouched(true);
+                      setNameError(name.trim().length < 2);
+                    }}
+                    placeholder={t('reserveModal.namePlaceholder', 'Masalan: Alisher')}
+                    aria-invalid={nameError}
+                    aria-describedby={nameError ? 'reservation-name-error' : undefined}
+                    className={`w-full min-h-[44px] bg-[#0E0C09] border ${
+                      nameError ? 'border-red-500/80 focus:border-red-500' : 'border-[#29231D] focus:border-[#C59853]'
+                    } rounded-sm px-3.5 py-2.5 text-xs text-[#F5F1EA] placeholder-[#D5C9B3]/30 focus:outline-none transition-colors`}
                     required
                   />
+                  {nameError && (
+                    <p id="reservation-name-error" className="flex items-center gap-1 text-[11px] text-red-400 mt-1 font-sans">
+                      <AlertCircle className="w-3 h-3 shrink-0" />
+                      <span>{t('reserveModal.nameError', 'Ismingizni kiriting')}</span>
+                    </p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-[10px] uppercase tracking-[0.2em] text-[#D5C9B3]/70 mb-1.5 font-sans">
-                    {t('reserveModal.phoneLabel', 'Telefon raqamingiz')}
+                    {t('reserveModal.phoneLabel', 'Telefon raqamingiz')} *
                   </label>
                   <input
                     type="tel"
+                    id="reservation-phone-input"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+998 90 000 00 00"
-                    className="w-full min-h-[44px] bg-[#0E0C09] border border-[#29231D] rounded-sm px-3.5 py-2.5 text-xs text-[#F5F1EA] placeholder-[#D5C9B3]/30 focus:outline-none focus:border-[#C59853]"
+                    onChange={(e) => {
+                      const formatted = formatUzPhone(e.target.value);
+                      setPhone(formatted);
+                      if (phoneTouched) {
+                        setPhoneError(!isValidUzPhone(formatted));
+                      }
+                    }}
+                    onBlur={() => {
+                      setPhoneTouched(true);
+                      setPhoneError(!isValidUzPhone(phone));
+                    }}
+                    placeholder="+998 (90) 000-00-00"
+                    aria-invalid={phoneError}
+                    aria-describedby={phoneError ? 'reservation-phone-error' : undefined}
+                    className={`w-full min-h-[44px] bg-[#0E0C09] border ${
+                      phoneError ? 'border-red-500/80 focus:border-red-500' : 'border-[#29231D] focus:border-[#C59853]'
+                    } rounded-sm px-3.5 py-2.5 text-xs text-[#F5F1EA] placeholder-[#D5C9B3]/30 focus:outline-none transition-colors`}
                     required
                   />
+                  {phoneError && (
+                    <p id="reservation-phone-error" className="flex items-center gap-1 text-[11px] text-red-400 mt-1 font-sans">
+                      <AlertCircle className="w-3 h-3 shrink-0" />
+                      <span>{t('reserveModal.phoneError', "Telefon raqamini to'liq kiriting (+998 XX XXX-XX-XX)")}</span>
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -269,7 +454,7 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
                 type="submit"
                 id="submit-reservation-btn"
                 disabled={isSending}
-                className="w-full min-h-[48px] py-3.5 sm:py-4 mt-4 rounded-full bg-[#F5F1EA] text-[#0C0A08] text-xs uppercase tracking-[0.2em] font-semibold hover:bg-[#DDB475] transition-colors shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-70"
+                className="w-full min-h-[48px] py-3.5 sm:py-4 mt-4 rounded-full bg-[#F5F1EA] text-[#0C0A08] text-xs uppercase tracking-[0.2em] font-semibold hover:bg-[#DDB475] transition-colors shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-70 cursor-pointer"
               >
                 {isSending ? (
                   <span>{t('reserveModal.sending', 'Yuborilmoqda...')}</span>
@@ -308,7 +493,7 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
               <strong className="text-[#FCFAF7] font-medium">{name || t('reserveModal.guestFallback', 'Mehmon')}</strong>.{' '}
               {t('reserveModal.tableBooked', 'Joy')}{' '}
               <span className="text-[#DDB475]">{currentLocationName}</span>{' '}
-              {t('reserveModal.confirmedFor', 'vaqti uchun band qilindi:')} {time}, {date} (
+              {t('reserveModal.confirmedFor', 'vaqti uchun band qilindi:')} {time}, {effectiveBookingDate} (
               {guests} {t('reserveModal.guestsCount', 'kishi')}).
             </p>
 
@@ -363,7 +548,7 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
 
             <button
               onClick={handleReset}
-              className="min-h-[40px] px-6 py-2 rounded-full border border-[#29231D] text-[#D5C9B3]/80 text-[11px] uppercase tracking-[0.16em] hover:text-[#FCFAF7] hover:border-[#C59853] transition-colors"
+              className="min-h-[40px] px-6 py-2 rounded-full border border-[#29231D] text-[#D5C9B3]/80 text-[11px] uppercase tracking-[0.16em] hover:text-[#FCFAF7] hover:border-[#C59853] transition-colors cursor-pointer"
             >
               {t('reserveModal.returnBtn', 'Bosh sahifaga qaytish')}
             </button>
@@ -373,3 +558,4 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
     </div>
   );
 };
+

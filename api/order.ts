@@ -11,7 +11,7 @@ interface OrderPayload {
 }
 
 function escapeHtml(value: string): string {
-  return value
+  return (value || '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
@@ -24,11 +24,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
+  const chatId = process.env.TELEGRAM_CHAT_ID || '-5392092158';
 
-  if (!botToken || !chatId) {
-    console.error('Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID env vars');
-    return res.status(500).json({ ok: false, error: 'Server misconfigured' });
+  if (!botToken) {
+    console.error('Missing TELEGRAM_BOT_TOKEN env var');
+    return res.status(500).json({ ok: false, error: 'Server misconfigured (TELEGRAM_BOT_TOKEN missing)' });
   }
 
   const body = (req.body || {}) as OrderPayload;
@@ -63,11 +63,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!telegramRes.ok) {
       const errText = await telegramRes.text();
       console.error('Telegram API error:', errText);
-      return res.status(502).json({ ok: false, error: 'Telegram yuborishda xatolik' });
+      return res.status(502).json({ ok: false, error: 'Telegram yuborishda xatolik', details: errText });
     }
 
-    return res.status(200).json({ ok: true });
-  } catch (err) {
+    const data = await telegramRes.json().catch(() => ({}));
+    return res.status(200).json({ ok: true, messageId: data.result?.message_id });
+  } catch (err: any) {
     console.error('Order submission failed:', err);
     return res.status(500).json({ ok: false, error: 'Kutilmagan xatolik' });
   }

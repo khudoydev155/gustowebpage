@@ -32,6 +32,21 @@ export default function App() {
     }
   };
 
+  React.useEffect(() => {
+    if (window.location.hash) {
+      const targetId = window.location.hash.replace('#', '');
+      const timer = setTimeout(() => {
+        const el = document.getElementById(targetId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, []);
+
   const handleOpenReservation = (locationId?: string) => {
     setReservationLocationId(locationId);
     setReservationOpen(true);
@@ -40,7 +55,10 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#0C0A08] text-[#F5F1EA] selection:bg-[#B88746]/40 selection:text-[#FCFAF7] overflow-x-clip">
       {/* 01 - Sticky Brand Navigation */}
-      <Navbar onOpenReservation={() => handleOpenReservation()} />
+      <Navbar
+        onOpenReservation={() => handleOpenReservation()}
+        onOpenFavorites={() => setFullCarteOpen(true)}
+      />
 
       <main id="main-content">
         {/* 02 - Hero Section */}

@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Menu, X, ArrowUpRight } from 'lucide-react';
+import { Volume2, VolumeX, Menu, X, ArrowUpRight, Heart } from 'lucide-react';
 import { toggleAmbientAudio } from '../utils/ambientSound';
 import { useLanguage, Language } from '../i18n';
+import { useFavorites } from '../utils/useFavorites';
 
 interface NavbarProps {
   onOpenReservation: () => void;
+  onOpenFavorites?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenReservation }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onOpenReservation, onOpenFavorites }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [audioActive, setAudioActive] = useState(false);
   const { language, setLanguage, t } = useLanguage();
+  const { count: favoritesCount } = useFavorites();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -159,6 +162,20 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenReservation }) => {
             )}
           </button>
 
+          {/* Favorites Quick Button (if user has saved items) */}
+          {favoritesCount > 0 && onOpenFavorites && (
+            <button
+              onClick={onOpenFavorites}
+              id="nav-favorites-btn"
+              title={t('common.favorites', 'Sevimlilar')}
+              aria-label={`${t('common.favorites', 'Sevimlilar')} (${favoritesCount})`}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-sans tracking-wider border border-[#C59853]/40 bg-[#C59853]/10 text-[#DDB475] hover:bg-[#C59853]/20 transition-all duration-300"
+            >
+              <Heart className="w-3.5 h-3.5 text-[#DDB475] fill-[#DDB475]" />
+              <span className="font-semibold">{favoritesCount}</span>
+            </button>
+          )}
+
           {/* Visit Us CTA Button */}
           <button
             onClick={onOpenReservation}
@@ -196,6 +213,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenReservation }) => {
               </button>
             ))}
           </div>
+
+          {favoritesCount > 0 && onOpenFavorites && (
+            <button
+              onClick={onOpenFavorites}
+              id="mobile-favorites-btn"
+              title={t('common.favorites', 'Sevimlilar')}
+              aria-label={`${t('common.favorites', 'Sevimlilar')} (${favoritesCount})`}
+              className="min-h-[44px] min-w-[36px] flex items-center justify-center text-[#DDB475] relative"
+            >
+              <Heart className="w-4 h-4 fill-[#DDB475]" />
+              <span className="absolute top-1.5 right-0 text-[8px] bg-[#C59853] text-[#0C0A08] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">
+                {favoritesCount}
+              </span>
+            </button>
+          )}
 
           <button
             onClick={handleAudioToggle}

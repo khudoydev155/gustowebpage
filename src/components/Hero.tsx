@@ -20,12 +20,13 @@ export const Hero: React.FC<HeroProps> = ({ onExploreClick, onFindCafeClick }) =
         <img
           src="https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=85&w=2000&auto=format&fit=crop"
           alt="Single origin espresso extraction in ceramic cup on dark warm timber"
-          className="w-full h-full object-cover object-center transform scale-105 transition-transform duration-[4000ms] ease-out will-change-transform brightness-[0.72] contrast-[1.08]"
+          className="w-full h-full object-cover object-center transform scale-105 transition-transform duration-[4000ms] ease-out will-change-transform brightness-[0.58] contrast-[1.12]"
           loading="eager"
         />
         {/* Editorial Lighting Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0C0A08] via-[#0C0A08]/45 to-[#0C0A08]/80 pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0C0A08]/90 via-[#0C0A08]/40 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0C0A08] via-[#0C0A08]/65 to-[#0C0A08]/85 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0C0A08]/95 via-[#0C0A08]/65 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_50%,rgba(12,10,8,0.75),transparent_75%)] pointer-events-none" />
       </div>
 
       {/* Main Editorial Hero Content */}
@@ -34,13 +35,13 @@ export const Hero: React.FC<HeroProps> = ({ onExploreClick, onFindCafeClick }) =
           {/* Eyebrow */}
           <div className="inline-flex items-center gap-3 mb-4 sm:mb-6">
             <span className="w-6 h-[1px] bg-[#C59853]"></span>
-            <p className="text-xs uppercase tracking-[0.35em] text-[#DDB475] font-medium font-sans">
+            <p className="text-xs uppercase tracking-[0.35em] text-[#DDB475] font-medium font-sans drop-shadow-sm">
               {t('hero.eyebrow', 'GUSTO COFFEE • XONQA')}
             </p>
           </div>
 
           {/* Master Headline */}
-          <h1 className="font-serif text-4xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight text-[#FCFAF7] leading-[1.02] sm:leading-[0.98] font-normal mb-6 sm:mb-8">
+          <h1 className="font-serif text-4xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight text-[#FCFAF7] leading-[1.02] sm:leading-[0.98] font-normal mb-6 sm:mb-8 drop-shadow-[0_2px_16px_rgba(0,0,0,0.85)]">
             {t('hero.headlineLine1', 'Qahva,')} <br />
             <span className="italic font-light text-[#EAE3D5]">
               {t('hero.headlineLine2', "o'ziga xos xarakter bilan.")}
@@ -48,7 +49,7 @@ export const Hero: React.FC<HeroProps> = ({ onExploreClick, onFindCafeClick }) =
           </h1>
 
           {/* Supporting Copy */}
-          <p className="text-sm sm:text-lg lg:text-xl text-[#D5C9B3] font-light leading-relaxed max-w-xl mb-8 sm:mb-10">
+          <p className="text-sm sm:text-lg lg:text-xl text-[#EAE3D5] font-light leading-relaxed max-w-xl mb-8 sm:mb-10 drop-shadow-[0_1px_8px_rgba(0,0,0,0.7)]">
             {t(
               'hero.subtitle',
               "Qahva shoshilmaslik uchun yaratilgan. Xonqada mehr va yuksak e'tibor bilan tayyorlangan shinam qahvaxona muhiti."

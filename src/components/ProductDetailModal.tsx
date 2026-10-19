@@ -1,7 +1,8 @@
 import React from 'react';
-import { X, Sparkles, Droplets, Mountain, Flame, Compass } from 'lucide-react';
+import { X, Sparkles, Droplets, Mountain, Flame, Compass, Heart } from 'lucide-react';
 import { SignatureProduct } from '../types';
 import { useLanguage } from '../i18n';
+import { useFavorites } from '../utils/useFavorites';
 
 interface ProductDetailModalProps {
   product: SignatureProduct | null;
@@ -15,6 +16,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   onReserveTasting,
 }) => {
   const { language, t, localize } = useLanguage();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   if (!product) return null;
 
@@ -30,14 +32,33 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         className="relative bg-[#13100D] border border-[#29231D] max-w-2xl w-full max-h-[90dvh] overflow-y-auto rounded-sm overflow-hidden text-[#F5F1EA] shadow-2xl my-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          aria-label={t('productModal.closeAria', 'Close modal')}
-          className="absolute top-3 right-3 sm:top-5 sm:right-5 z-20 text-[#D5C9B3]/70 hover:text-[#FCFAF7] bg-[#0C0A08]/80 backdrop-blur-md min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full border border-[#29231D] transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* Favorite & Close Action Buttons */}
+        <div className="absolute top-3 right-3 sm:top-5 sm:right-5 z-20 flex items-center gap-2">
+          <button
+            onClick={() => toggleFavorite(product.id)}
+            aria-label={
+              isFavorite(product.id)
+                ? t('common.removeFromFavorites', "Sevimlilardan o'chirish")
+                : t('common.addToFavorites', "Sevimlilarga qo'shish")
+            }
+            title={
+              isFavorite(product.id)
+                ? t('common.removeFromFavorites', "Sevimlilardan o'chirish")
+                : t('common.addToFavorites', "Sevimlilarga qo'shish")
+            }
+            className="text-[#D5C9B3]/70 hover:text-[#DDB475] bg-[#0C0A08]/80 backdrop-blur-md min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full border border-[#29231D] transition-colors"
+          >
+            <Heart className={`w-5 h-5 ${isFavorite(product.id) ? 'text-[#DDB475] fill-[#DDB475]' : ''}`} />
+          </button>
+
+          <button
+            onClick={onClose}
+            aria-label={t('productModal.closeAria', 'Close modal')}
+            className="text-[#D5C9B3]/70 hover:text-[#FCFAF7] bg-[#0C0A08]/80 backdrop-blur-md min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full border border-[#29231D] transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
         {/* Hero Header Image */}
         <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full overflow-hidden bg-[#0A0908]">

@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { ArrowRight, Sparkles, Heart } from 'lucide-react';
 import { SIGNATURE_PRODUCTS } from '../data/coffeeData';
 import { SignatureProduct } from '../types';
@@ -29,7 +30,13 @@ export const SignatureCoffee: React.FC<SignatureCoffeeProps> = ({
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
         {/* Editorial Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 sm:gap-8 mb-12 sm:mb-20">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-50px' }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-col md:flex-row md:items-end justify-between gap-6 sm:gap-8 mb-12 sm:mb-20"
+        >
           <div>
             <div className="inline-flex items-center gap-2.5 mb-3 sm:mb-4">
               <span className="w-5 h-[1px] bg-[#C59853]" />
@@ -52,24 +59,31 @@ export const SignatureCoffee: React.FC<SignatureCoffeeProps> = ({
                 "Har bir ta'm o'ziga xos mehnat va baristalarimiz mahoratining ifodasidir."
               )}
             </p>
-            <button
+            <motion.button
               onClick={onExploreFullMenu}
               id="view-full-carte-btn"
-              className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[#DDB475] hover:text-[#FCFAF7] transition-colors py-1 group min-h-[44px]"
+              whileHover={{ x: 3 }}
+              transition={{ duration: 0.2 }}
+              className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[#DDB475] hover:text-[#FCFAF7] transition-colors py-1 group min-h-[44px] cursor-pointer"
             >
               <span>{t('signature.viewFullMenu', "To'liq menyuni ko'rish")}</span>
-              <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
-            </button>
+              <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1.5 transition-transform" />
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Asymmetric Editorial Product Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-stretch">
           {/* Featured Large Hero Product (col-span-7) */}
-          <div
+          <motion.div
+            initial={{ opacity: 0, y: 32 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            whileHover={{ y: -5 }}
             onClick={() => onSelectProduct(featuredProduct)}
             id={`product-card-${featuredProduct.id}`}
-            className="lg:col-span-7 group cursor-pointer relative bg-[#13100D] border border-[#29231D] hover:border-[#C59853]/60 transition-all duration-500 rounded-sm overflow-hidden flex flex-col justify-between"
+            className="lg:col-span-7 group cursor-pointer relative bg-[#13100D] border border-[#29231D] hover:border-[#C59853]/60 transition-all duration-300 rounded-sm overflow-hidden flex flex-col justify-between"
           >
             {/* Image Container with 35mm warmth */}
             <div className="relative aspect-[16/11] w-full overflow-hidden bg-[#0A0908]">
@@ -90,8 +104,10 @@ export const SignatureCoffee: React.FC<SignatureCoffeeProps> = ({
                   </span>
                 ) : <span />}
 
-                <button
+                <motion.button
                   type="button"
+                  whileHover={{ scale: 1.15 }}
+                  whileTap={{ scale: 0.85 }}
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleFavorite(featuredProduct.id);
@@ -109,13 +125,13 @@ export const SignatureCoffee: React.FC<SignatureCoffeeProps> = ({
                   className="w-9 h-9 rounded-full bg-[#0C0A08]/85 backdrop-blur-md border border-[#29231D] hover:border-[#C59853] text-[#D5C9B3] hover:text-[#DDB475] transition-colors flex items-center justify-center pointer-events-auto shadow-md"
                 >
                   <Heart
-                    className={`w-4 h-4 ${
+                    className={`w-4 h-4 transition-colors ${
                       isFavorite(featuredProduct.id)
                         ? 'text-[#DDB475] fill-[#DDB475]'
                         : 'text-[#D5C9B3]/70'
                     }`}
                   />
-                </button>
+                </motion.button>
               </div>
 
               {/* Price Tag */}
@@ -164,16 +180,21 @@ export const SignatureCoffee: React.FC<SignatureCoffeeProps> = ({
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Secondary Products Column (col-span-5) */}
           <div className="lg:col-span-5 flex flex-col gap-4 sm:gap-6">
-            {secondaryProducts.map((product) => (
-              <div
+            {secondaryProducts.map((product, idx) => (
+              <motion.div
                 key={product.id}
+                initial={{ opacity: 0, x: 24 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: '-50px' }}
+                transition={{ duration: 0.6, delay: idx * 0.15, ease: [0.16, 1, 0.3, 1] }}
+                whileHover={{ y: -3, borderColor: 'rgba(197, 152, 83, 0.6)' }}
                 onClick={() => onSelectProduct(product)}
                 id={`product-card-${product.id}`}
-                className="group cursor-pointer bg-[#13100D] border border-[#29231D] hover:border-[#C59853]/50 transition-all duration-400 p-4 sm:p-7 rounded-sm flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center"
+                className="group cursor-pointer bg-[#13100D] border border-[#29231D] transition-colors p-4 sm:p-7 rounded-sm flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center"
               >
                 {/* Product Thumbnail */}
                 <div className="relative w-full sm:w-36 h-44 sm:h-36 shrink-0 overflow-hidden bg-[#0A0908] rounded-sm">
@@ -193,8 +214,10 @@ export const SignatureCoffee: React.FC<SignatureCoffeeProps> = ({
                       {localize(product.subtitle)}
                     </span>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <button
+                      <motion.button
                         type="button"
+                        whileHover={{ scale: 1.2 }}
+                        whileTap={{ scale: 0.8 }}
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleFavorite(product.id);
@@ -218,7 +241,7 @@ export const SignatureCoffee: React.FC<SignatureCoffeeProps> = ({
                               : 'text-[#D5C9B3]/40'
                           }`}
                         />
-                      </button>
+                      </motion.button>
                       <span className="font-serif text-sm text-[#DDB475]">
                         {product.price}
                       </span>
@@ -244,7 +267,7 @@ export const SignatureCoffee: React.FC<SignatureCoffeeProps> = ({
                     ))}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

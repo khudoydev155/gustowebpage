@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { Quote } from 'lucide-react';
 import { useLanguage } from '../i18n';
 
@@ -13,12 +14,18 @@ export const BrandStory: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-center">
           {/* Left Column: Editorial Photo with Architectural Frame (col-span-6) */}
-          <div className="lg:col-span-6 relative">
-            <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#0A0908] rounded-sm">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-6 relative"
+          >
+            <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#0A0908] rounded-sm group">
               <img
                 src="https://images.unsplash.com/photo-1511920170033-f8396924c348?q=85&w=1400&auto=format&fit=crop"
                 alt="Slow coffee poured into bespoke ceramic cup on aged wooden counter"
-                className="w-full h-full object-cover object-center brightness-[0.9] contrast-[1.05]"
+                className="w-full h-full object-cover object-center brightness-[0.9] contrast-[1.05] group-hover:scale-105 transition-transform duration-700 ease-out"
                 loading="lazy"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0E0C09]/80 via-transparent to-transparent" />
@@ -40,10 +47,16 @@ export const BrandStory: React.FC = () => {
 
             {/* Subtle decorative offset outline */}
             <div className="hidden lg:block absolute -bottom-6 -left-6 w-full h-full border border-[#29231D] -z-10 pointer-events-none" />
-          </div>
+          </motion.div>
 
           {/* Right Column: Narrative Storytelling (col-span-6) */}
-          <div className="lg:col-span-6 flex flex-col justify-center">
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-6 flex flex-col justify-center"
+          >
             <div className="inline-flex items-center gap-2.5 mb-4 sm:mb-5">
               <span className="w-6 h-[1px] bg-[#C59853]" />
               <p className="text-xs uppercase tracking-[0.3em] text-[#C59853] font-medium font-sans">
@@ -74,7 +87,12 @@ export const BrandStory: React.FC = () => {
 
             {/* Three Pillars */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6 pt-6 sm:pt-8 border-t border-[#29231D]">
-              <div>
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
                 <span className="text-xs font-serif italic text-[#C59853] block mb-1">
                   {t('story.pillar1Num', '01 / Tanlov')}
                 </span>
@@ -87,9 +105,14 @@ export const BrandStory: React.FC = () => {
                     'Har bir ichimlik faqat toza va saralangan xomashyolardan tayyorlanadi.'
                   )}
                 </p>
-              </div>
+              </motion.div>
 
-              <div>
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
                 <span className="text-xs font-serif italic text-[#C59853] block mb-1">
                   {t('story.pillar2Num', '02 / Mahorat')}
                 </span>
@@ -102,9 +125,14 @@ export const BrandStory: React.FC = () => {
                     "Qahva ekstraksiyasi va sut ko'pirtirish jarayoni aniq me'yorda bajariladi."
                   )}
                 </p>
-              </div>
+              </motion.div>
 
-              <div>
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
                 <span className="text-xs font-serif italic text-[#C59853] block mb-1">
                   {t('story.pillar3Num', '03 / Muhit')}
                 </span>
@@ -117,9 +145,9 @@ export const BrandStory: React.FC = () => {
                     'Uchrashuvlar, fikr jamlash va sokin suhbatlar uchun yaratilgan qulay maskan.'
                   )}
                 </p>
-              </div>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

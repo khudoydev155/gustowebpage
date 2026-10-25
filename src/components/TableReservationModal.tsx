@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { X, CheckCircle2, Send, ExternalLink, MessageSquare, Calendar, Clock, AlertCircle } from 'lucide-react';
 import { CAFE_LOCATIONS } from '../data/coffeeData';
 import { BRAND_CONTACTS, sendReservationToTelegram, generateTelegramBookingText } from '../data/brandInfo';
@@ -94,8 +95,6 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
   const [isSending, setIsSending] = useState(false);
   const [autoDeliveryFailed, setAutoDeliveryFailed] = useState(false);
 
-  if (!isOpen) return null;
-
   const experiences = [
     { id: 'slowCoffee', label: t('reserveModal.expSlow', 'Qahva tatib ko‘rish') },
     { id: 'quietWork', label: t('reserveModal.expQuiet', 'Sokin ishlash / Mutolaa') },
@@ -186,15 +185,25 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
   const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/gustobronbot')}&text=${encodeURIComponent(telegramShareText)}`;
 
   return (
-    <div
-      id="reservation-modal-overlay"
-      className="fixed inset-0 z-50 bg-[#0C0A08]/92 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
-      onClick={onClose}
-    >
-      <div
-        className="relative bg-[#13100D] border border-[#29231D] max-w-xl w-full max-h-[90dvh] overflow-y-auto rounded-sm p-5 sm:p-10 text-[#F5F1EA] shadow-2xl my-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          id="reservation-modal-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.22 }}
+          className="fixed inset-0 z-50 bg-[#0C0A08]/92 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            className="relative bg-[#13100D] border border-[#29231D] max-w-xl w-full max-h-[90dvh] overflow-y-auto rounded-sm p-5 sm:p-10 text-[#F5F1EA] shadow-2xl my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
         <button
           onClick={onClose}
           id="close-reservation-modal-btn"
@@ -231,47 +240,64 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5" noValidate>
-              {/* Location Select */}
-              <div>
-                <label className="block text-[10px] uppercase tracking-[0.2em] text-[#D5C9B3]/70 mb-2 font-sans">
-                  {t('reserveModal.selectSpaceLabel', 'Makonni tanlang')}
-                </label>
-                <div
-                  className={`grid grid-cols-1 ${CAFE_LOCATIONS.length > 1 ? 'sm:grid-cols-2' : ''
-                    } gap-2.5`}
-                >
-                  {CAFE_LOCATIONS.map((loc) => (
-                    <button
-                      type="button"
-                      key={loc.id}
-                      onClick={() => setSelectedLocation(loc.id)}
-                      className={`p-3 text-left border rounded-sm text-xs transition-all min-h-[44px] ${selectedLocation === loc.id
-                        ? 'border-[#C59853] bg-[#1C1713] text-[#FCFAF7]'
-                        : 'border-[#29231D] bg-[#0E0C09] text-[#D5C9B3]/60 hover:border-[#3E362D]'
+              {/* Location Info (Single or Multiple) */}
+              {CAFE_LOCATIONS.length > 1 ? (
+                <div>
+                  <label className="block text-[10px] uppercase tracking-[0.2em] text-[#D5C9B3]/70 mb-2 font-sans">
+                    {t('reserveModal.selectSpaceLabel', 'Makonni tanlang')}
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {CAFE_LOCATIONS.map((loc) => (
+                      <button
+                        type="button"
+                        key={loc.id}
+                        onClick={() => setSelectedLocation(loc.id)}
+                        className={`p-3 text-left border rounded-lg text-xs transition-all min-h-[44px] ${
+                          selectedLocation === loc.id
+                            ? 'border-[#C59853] bg-[#1C1713] text-[#FCFAF7]'
+                            : 'border-[#29231D] bg-[#0E0C09] text-[#D5C9B3]/60 hover:border-[#3E362D]'
                         }`}
-                    >
-                      <p className="font-serif text-sm font-medium">{loc.name}</p>
-                      <p className="text-[10px] text-[#D5C9B3]/50 truncate">{loc.district}</p>
-                    </button>
-                  ))}
+                      >
+                        <p className="font-serif text-sm font-medium">{loc.name}</p>
+                        <p className="text-[10px] text-[#D5C9B3]/50 truncate">{loc.district}</p>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="flex items-center justify-between p-3 rounded-lg bg-[#0E0C09] border border-[#29231D]">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-[#C59853] text-sm" aria-hidden="true">📍</span>
+                    <div>
+                      <span className="text-xs font-medium text-[#FCFAF7] block">{currentLocationName}</span>
+                      <span className="text-[10px] text-[#D5C9B3]/60 block">{BRAND_CONTACTS.address}</span>
+                    </div>
+                  </div>
+                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 font-sans">
+                    Ochiq
+                  </span>
+                </div>
+              )}
 
-              {/* Experience Type */}
+              {/* Experience Type (Compact) */}
               <div>
-                <label className="block text-[10px] uppercase tracking-[0.2em] text-[#D5C9B3]/70 mb-2 font-sans">
-                  {t('reserveModal.intentLabel', 'Tashrif maqsadi')}
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[10px] uppercase tracking-[0.2em] text-[#D5C9B3]/70 font-sans">
+                    {t('reserveModal.intentLabel', 'Tashrif maqsadi')}
+                  </label>
+                  <span className="text-[9px] text-[#D5C9B3]/50 font-sans">Ixtiyoriy</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
                   {experiences.map((exp) => (
                     <button
                       type="button"
                       key={exp.id}
                       onClick={() => setExperience(exp.id)}
-                      className={`p-2.5 text-center border rounded-sm text-xs sm:text-[11px] font-sans transition-all min-h-[44px] flex items-center justify-center ${experience === exp.id
-                        ? 'border-[#C59853] bg-[#C59853]/15 text-[#DDB475]'
-                        : 'border-[#29231D] bg-[#0E0C09] text-[#D5C9B3]/60 hover:border-[#3E362D]'
-                        }`}
+                      className={`p-2 text-center border rounded-lg text-[11px] font-sans transition-all min-h-[38px] flex items-center justify-center ${
+                        experience === exp.id
+                          ? 'border-[#C59853] bg-[#C59853]/15 text-[#DDB475] font-medium'
+                          : 'border-[#29231D] bg-[#0E0C09] text-[#D5C9B3]/70 hover:border-[#3E362D]'
+                      }`}
                     >
                       {exp.label}
                     </button>
@@ -454,7 +480,7 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
                 type="submit"
                 id="submit-reservation-btn"
                 disabled={isSending}
-                className="w-full min-h-[48px] py-3.5 sm:py-4 mt-4 rounded-full bg-[#F5F1EA] text-[#0C0A08] text-xs uppercase tracking-[0.2em] font-semibold hover:bg-[#DDB475] transition-colors shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-70 cursor-pointer"
+                className="w-full min-h-[48px] py-3.5 sm:py-4 mt-4 rounded-xl bg-[#C59853] text-[#0C0A08] text-xs uppercase tracking-[0.2em] font-semibold hover:bg-[#DDB475] transition-all shadow-lg shadow-[#C59853]/20 active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-70 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCFAF7]"
               >
                 {isSending ? (
                   <span>{t('reserveModal.sending', 'Yuborilmoqda...')}</span>
@@ -554,8 +580,10 @@ export const TableReservationModal: React.FC<TableReservationModalProps> = ({
             </button>
           </div>
         )}
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

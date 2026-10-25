@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { ATMOSPHERE_IMAGES } from '../data/coffeeData';
 import { useLanguage } from '../i18n';
 
@@ -31,7 +32,13 @@ export const AtmosphereGallery: React.FC = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
         {/* Editorial Atmosphere Intro */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 sm:gap-8 mb-12 sm:mb-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-50px' }}
+          transition={{ duration: 0.6 }}
+          className="flex flex-col md:flex-row md:items-end justify-between gap-6 sm:gap-8 mb-12 sm:mb-20"
+        >
           <div>
             <div className="inline-flex items-center gap-2.5 mb-3 sm:mb-4">
               <span className="w-5 h-[1px] bg-[#C59853]" />
@@ -55,16 +62,21 @@ export const AtmosphereGallery: React.FC = () => {
               )}
             </p>
           </div>
-        </div>
+        </motion.div>
 
         {/* Asymmetric Editorial Collage */}
         <div className="grid grid-cols-12 gap-4 sm:gap-8 items-start">
           {ATMOSPHERE_IMAGES.map((item, index) => (
-            <div
+            <motion.div
               key={item.id}
+              initial={{ opacity: 0, scale: 0.96, y: 20 }}
+              whileInView={{ opacity: 1, scale: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.6, delay: (index % 3) * 0.1, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ y: -4 }}
               className={`${getColSpanClass(
                 index
-              )} group relative overflow-hidden bg-[#13100D] border border-[#29231D] rounded-sm`}
+              )} group relative overflow-hidden bg-[#13100D] border border-[#29231D] hover:border-[#C59853]/50 transition-colors rounded-sm`}
             >
               <img
                 src={item.image}
@@ -86,12 +98,18 @@ export const AtmosphereGallery: React.FC = () => {
                   {localize(item.caption)}
                 </p>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
         {/* Atmospheric Detail Strip */}
-        <div className="mt-12 sm:mt-16 pt-6 sm:pt-8 border-t border-[#29231D]/80 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-left">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="mt-12 sm:mt-16 pt-6 sm:pt-8 border-t border-[#29231D]/80 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-left"
+        >
           <div>
             <span className="text-[10px] uppercase tracking-[0.2em] text-[#C59853] block mb-1">
               {t('atmosphere.stripMaterial', 'Materiallar uyg‘unligi')}
@@ -124,7 +142,7 @@ export const AtmosphereGallery: React.FC = () => {
               {t('atmosphere.stripMoodVal', 'Sokinlik va dildan suhbat')}
             </p>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

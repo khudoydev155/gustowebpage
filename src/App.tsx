@@ -102,6 +102,8 @@ export default function App() {
       <main id="main-content">
         {/* 02 - Hero Section */}
         <Hero
+          onOpenMenu={() => setFullCarteOpen(true)}
+          onOpenReservation={() => handleOpenReservation()}
           onExploreClick={() => scrollToSection('signature')}
           onFindCafeClick={() => scrollToSection('locations')}
         />

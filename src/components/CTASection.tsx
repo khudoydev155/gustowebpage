@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { MapPin, Compass } from 'lucide-react';
 import { useLanguage } from '../i18n';
 
@@ -26,7 +27,13 @@ export const CTASection: React.FC<CTASectionProps> = ({ onFindCafe, onExploreMen
         <div className="absolute inset-0 bg-gradient-to-t from-[#0A0908] via-[#0A0908]/70 to-[#0A0908]" />
       </div>
 
-      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-8 text-center">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-50px' }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 max-w-4xl mx-auto px-4 sm:px-8 text-center"
+      >
         <div className="inline-flex items-center gap-3 mb-4 sm:mb-6">
           <span className="w-6 sm:w-8 h-[1px] bg-[#C59853]" />
           <p className="text-[11px] sm:text-xs uppercase tracking-[0.35em] text-[#DDB475] font-medium font-sans">
@@ -50,25 +57,29 @@ export const CTASection: React.FC<CTASectionProps> = ({ onFindCafe, onExploreMen
         </p>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-6 max-w-sm sm:max-w-none mx-auto">
-          <button
+          <motion.button
+            whileHover={{ scale: 1.03, y: -2 }}
+            whileTap={{ scale: 0.98 }}
             onClick={onFindCafe}
             id="cta-find-cafe-btn"
-            className="min-h-[48px] px-6 sm:px-9 py-3.5 sm:py-4 rounded-full bg-[#F5F1EA] text-[#0C0A08] text-xs uppercase tracking-[0.2em] font-medium hover:bg-[#DDB475] transition-all duration-300 shadow-[0_8px_24px_rgba(245,241,234,0.12)] active:scale-[0.98] flex items-center justify-center gap-2.5"
+            className="min-h-[48px] px-6 sm:px-9 py-3.5 sm:py-4 rounded-full bg-[#F5F1EA] text-[#0C0A08] text-xs uppercase tracking-[0.2em] font-medium hover:bg-[#DDB475] transition-all duration-300 shadow-[0_8px_24px_rgba(245,241,234,0.12)] flex items-center justify-center gap-2.5 cursor-pointer"
           >
             <MapPin className="w-4 h-4 text-[#0C0A08] shrink-0" />
             <span>{t('cta.findCafeBtn', 'Manzilni ko‘rish')}</span>
-          </button>
+          </motion.button>
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.03, y: -2 }}
+            whileTap={{ scale: 0.98 }}
             onClick={onExploreMenu}
             id="cta-explore-menu-btn"
-            className="min-h-[48px] px-6 sm:px-9 py-3.5 sm:py-4 rounded-full border border-[#D5C9B3]/40 text-[#F5F1EA] text-xs uppercase tracking-[0.2em] font-medium hover:border-[#DDB475] hover:bg-[#1C1713]/70 transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-2.5"
+            className="min-h-[48px] px-6 sm:px-9 py-3.5 sm:py-4 rounded-full border border-[#D5C9B3]/40 text-[#F5F1EA] text-xs uppercase tracking-[0.2em] font-medium hover:border-[#DDB475] hover:bg-[#1C1713]/70 transition-all duration-300 flex items-center justify-center gap-2.5 cursor-pointer"
           >
             <Compass className="w-4 h-4 text-[#C59853] shrink-0" />
             <span>{t('cta.exploreMenuBtn', 'Menyuni ko‘rish')}</span>
-          </button>
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 };

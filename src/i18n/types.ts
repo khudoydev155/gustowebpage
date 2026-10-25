@@ -39,6 +39,10 @@ export interface TranslationDictionary {
     subtitle: string;
     exploreBtn: string;
     findCafeBtn: string;
+    menuBtn?: string;
+    reserveBtn?: string;
+    statusOpen?: string;
+    phoneLabel?: string;
     currentLotLabel: string;
     locationLabel: string;
     locationValue: string;

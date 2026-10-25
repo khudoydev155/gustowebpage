@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { CAFE_LOCATIONS } from '../data/coffeeData';
 import { CafeLocation } from '../types';
 import { MapPin, Phone, Clock, Compass, Calendar, Check, ExternalLink } from 'lucide-react';
@@ -24,7 +25,13 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ onReserveTab
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 sm:gap-8 mb-12 sm:mb-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-50px' }}
+          transition={{ duration: 0.6 }}
+          className="flex flex-col md:flex-row md:items-end justify-between gap-6 sm:gap-8 mb-12 sm:mb-20"
+        >
           <div>
             <div className="inline-flex items-center gap-2.5 mb-3 sm:mb-4">
               <span className="w-5 h-[1px] bg-[#C59853]" />
@@ -45,7 +52,7 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ onReserveTab
               {t('locations.description', "Xonqa tumani, Xalqlar do'stligi ko'chasi, 3. Har kuni 8:00 AM — 2:00 AM.")}
             </p>
           </div>
-        </div>
+        </motion.div>
 
         {/* Location Selection Cards */}
         <div
@@ -197,91 +204,101 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ onReserveTab
       </div>
 
       {/* Interactive Map & Directions Modal */}
-      {showMapModal && (
-        <div
-          id="location-map-modal"
-          className="fixed inset-0 z-50 bg-[#0C0A08]/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
-          onClick={() => setShowMapModal(false)}
-        >
-          <div
-            className="relative bg-[#13100D] border border-[#29231D] max-w-2xl w-full max-h-[90vh] overflow-y-auto rounded-sm p-5 sm:p-8 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+      <AnimatePresence>
+        {showMapModal && (
+          <motion.div
+            id="location-map-modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
+            className="fixed inset-0 z-50 bg-[#0C0A08]/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
+            onClick={() => setShowMapModal(false)}
           >
-            <div className="flex items-start justify-between gap-4 mb-5 sm:mb-6">
-              <div>
-                <span className="text-[10px] uppercase tracking-[0.25em] text-[#C59853] block">
-                  {t('locations.transitGuide', "Manzil va yo'nalishlar")}
-                </span>
-                <h3 className="font-serif text-xl sm:text-3xl text-[#FCFAF7]">
-                  {selectedLocation.name}
-                </h3>
-              </div>
-              <button
-                onClick={() => setShowMapModal(false)}
-                className="min-h-[40px] px-3 py-1.5 text-xs uppercase tracking-wider text-[#D5C9B3]/60 hover:text-[#FCFAF7] border border-[#29231D] rounded-sm shrink-0 flex items-center justify-center"
-              >
-                {t('locations.closeMap', 'Yopish ✕')}
-              </button>
-            </div>
-
-            {/* Stylized Dark Architectural Map Canvas */}
-            <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full rounded-sm overflow-hidden bg-[#0A0908] border border-[#29231D] flex items-center justify-center p-4 sm:p-6 text-center">
-              <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#C59853_1px,transparent_1px)] [background-size:16px_16px]" />
-
-              <div className="relative z-10 flex flex-col items-center">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#C59853]/20 border border-[#C59853] flex items-center justify-center mb-2.5 sm:mb-3 animate-pulse">
-                  <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-[#DDB475]" />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+              className="relative bg-[#13100D] border border-[#29231D] max-w-2xl w-full max-h-[90vh] overflow-y-auto rounded-sm p-5 sm:p-8 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start justify-between gap-4 mb-5 sm:mb-6">
+                <div>
+                  <span className="text-[10px] uppercase tracking-[0.25em] text-[#C59853] block">
+                    {t('locations.transitGuide', "Manzil va yo'nalishlar")}
+                  </span>
+                  <h3 className="font-serif text-xl sm:text-3xl text-[#FCFAF7]">
+                    {selectedLocation.name}
+                  </h3>
                 </div>
-                <h4 className="font-serif text-lg sm:text-xl text-[#FCFAF7] mb-1">
-                  {selectedLocation.address}
-                </h4>
-                <p className="text-[11px] sm:text-xs text-[#D5C9B3]/80 font-sans max-w-sm mb-4">
-                  {t('locations.coordinatesLabel', 'Koordinatalar')}: {selectedLocation.mapCoordinates.lat}° N,{' '}
-                  {selectedLocation.mapCoordinates.lng}° E
-                </p>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3 w-full max-w-md">
-                  <a
-                    href={selectedLocation.googleMapsUrl || "https://maps.app.goo.gl/9XygkJ35KZSzZzg88"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="min-h-[44px] px-5 py-2.5 rounded-full bg-[#F5F1EA] text-[#0C0A08] text-xs uppercase tracking-[0.14em] font-medium hover:bg-[#DDB475] transition-colors flex items-center justify-center gap-2 shadow-md"
-                  >
-                    <span>Google Maps</span>
-                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                  </a>
-
-                  <a
-                    href={selectedLocation.yandexMapsUrl || "https://yandex.com/maps/org/gusto_coffee/24379307243?si=r00h1pdwv6vrdvjmgc3dfejjgg"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="min-h-[44px] px-5 py-2.5 rounded-full bg-[#181410] border border-[#C59853]/60 text-[#DDB475] text-xs uppercase tracking-[0.14em] font-medium hover:bg-[#C59853] hover:text-[#0C0A08] transition-all flex items-center justify-center gap-2"
-                  >
-                    <span>Yandex Xarita</span>
-                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-5 sm:mt-6 space-y-2 text-xs text-[#D5C9B3]/80">
-              <p>• {t('hero.locationLabel', 'Manzil')}: {selectedLocation.district}</p>
-              <p>• {t('hero.currentLotLabel', 'Ish tartibi')}: {localize(selectedLocation.hoursWeekday)}</p>
-              <p>
-                • {t('footer.directLine', 'Telefon')}:{' '}
-                <a
-                  href={`tel:${selectedLocation.phone.replace(/\s+/g, '')}`}
-                  className="hover:text-[#DDB475] py-1 inline-block"
+                <button
+                  onClick={() => setShowMapModal(false)}
+                  className="min-h-[40px] px-3 py-1.5 text-xs uppercase tracking-wider text-[#D5C9B3]/60 hover:text-[#FCFAF7] border border-[#29231D] rounded-sm shrink-0 flex items-center justify-center cursor-pointer"
                 >
-                  {selectedLocation.phone}
-                </a>
-              </p>
-              <p>
-                • Telegram bron: <a href="https://t.me/gustobronbot" target="_blank" rel="noopener noreferrer" className="text-[#DDB475] hover:underline font-medium">@gustobronbot</a>
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+                  {t('locations.closeMap', 'Yopish ✕')}
+                </button>
+              </div>
+
+              {/* Stylized Dark Architectural Map Canvas */}
+              <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full rounded-sm overflow-hidden bg-[#0A0908] border border-[#29231D] flex items-center justify-center p-4 sm:p-6 text-center">
+                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#C59853_1px,transparent_1px)] [background-size:16px_16px]" />
+
+                <div className="relative z-10 flex flex-col items-center">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#C59853]/20 border border-[#C59853] flex items-center justify-center mb-2.5 sm:mb-3 animate-pulse">
+                    <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-[#DDB475]" />
+                  </div>
+                  <h4 className="font-serif text-lg sm:text-xl text-[#FCFAF7] mb-1">
+                    {selectedLocation.address}
+                  </h4>
+                  <p className="text-[11px] sm:text-xs text-[#D5C9B3]/80 font-sans max-w-sm mb-4">
+                    {t('locations.coordinatesLabel', 'Koordinatalar')}: {selectedLocation.mapCoordinates.lat}° N,{' '}
+                    {selectedLocation.mapCoordinates.lng}° E
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3 w-full max-w-md">
+                    <a
+                      href={selectedLocation.googleMapsUrl || "https://maps.app.goo.gl/9XygkJ35KZSzZzg88"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="min-h-[44px] px-5 py-2.5 rounded-full bg-[#F5F1EA] text-[#0C0A08] text-xs uppercase tracking-[0.14em] font-medium hover:bg-[#DDB475] transition-colors flex items-center justify-center gap-2 shadow-md cursor-pointer"
+                    >
+                      <span>Google Maps</span>
+                      <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                    </a>
+
+                    <a
+                      href={selectedLocation.yandexMapsUrl || "https://yandex.com/maps/org/gusto_coffee/24379307243?si=r00h1pdwv6vrdvjmgc3dfejjgg"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="min-h-[44px] px-5 py-2.5 rounded-full bg-[#181410] border border-[#C59853]/60 text-[#DDB475] text-xs uppercase tracking-[0.14em] font-medium hover:bg-[#C59853] hover:text-[#0C0A08] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <span>Yandex Xarita</span>
+                      <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 sm:mt-6 space-y-2 text-xs text-[#D5C9B3]/80">
+                <p>• {t('hero.locationLabel', 'Manzil')}: {selectedLocation.district}</p>
+                <p>• {t('hero.currentLotLabel', 'Ish tartibi')}: {localize(selectedLocation.hoursWeekday)}</p>
+                <p>
+                  • {t('footer.directLine', 'Telefon')}:{' '}
+                  <a
+                    href={`tel:${selectedLocation.phone.replace(/\s+/g, '')}`}
+                    className="hover:text-[#DDB475] py-1 inline-block"
+                  >
+                    {selectedLocation.phone}
+                  </a>
+                </p>
+                <p>
+                  • Telegram bron: <a href="https://t.me/gustobronbot" target="_blank" rel="noopener noreferrer" className="text-[#DDB475] hover:underline font-medium">@gustobronbot</a>
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };

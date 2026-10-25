@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { X, Sparkles, Droplets, Mountain, Flame, Compass, Heart } from 'lucide-react';
 import { SignatureProduct } from '../types';
 import { useLanguage } from '../i18n';
@@ -18,20 +19,28 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const { language, t, localize } = useLanguage();
   const { isFavorite, toggleFavorite } = useFavorites();
 
-  if (!product) return null;
-
-  const notes = product.notes[language] || product.notes.uz || product.notes.en || [];
+  const notes = product ? (product.notes[language] || product.notes.uz || product.notes.en || []) : [];
 
   return (
-    <div
-      id="product-detail-modal"
-      className="fixed inset-0 z-50 bg-[#0C0A08]/92 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
-      onClick={onClose}
-    >
-      <div
-        className="relative bg-[#13100D] border border-[#29231D] max-w-2xl w-full max-h-[90dvh] overflow-y-auto rounded-sm overflow-hidden text-[#F5F1EA] shadow-2xl my-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <AnimatePresence>
+      {product && (
+        <motion.div
+          id="product-detail-modal"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.22 }}
+          className="fixed inset-0 z-50 bg-[#0C0A08]/92 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+            transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+            className="relative bg-[#13100D] border border-[#29231D] max-w-2xl w-full max-h-[90dvh] overflow-y-auto rounded-sm overflow-hidden text-[#F5F1EA] shadow-2xl my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
         {/* Favorite & Close Action Buttons */}
         <div className="absolute top-3 right-3 sm:top-5 sm:right-5 z-20 flex items-center gap-2">
           <button
@@ -178,13 +187,15 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 onClose();
                 onReserveTasting();
               }}
-              className="w-full sm:w-auto min-h-[44px] px-6 py-3 rounded-full bg-[#F5F1EA] text-[#0C0A08] text-xs uppercase tracking-[0.16em] font-medium hover:bg-[#DDB475] transition-colors flex items-center justify-center shrink-0"
+              className="w-full sm:w-auto min-h-[44px] px-6 py-3 rounded-full bg-[#F5F1EA] text-[#0C0A08] text-xs uppercase tracking-[0.16em] font-medium hover:bg-[#DDB475] transition-colors flex items-center justify-center shrink-0 cursor-pointer"
             >
               {t('productModal.reserveBtn', 'Tatib ko‘rish uchun joy band qilish')}
             </button>
           </div>
         </div>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };

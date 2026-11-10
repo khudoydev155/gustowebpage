@@ -26,63 +26,82 @@ async def is_employee(bot: Bot, user_id: int) -> bool:
     return False
 
 def render_visual_cups(stamps: int, total: int = 6) -> str:
-    """Renders visual status bar e.g. [☕️][☕️][☕️][☕️][⚪️][🎁]"""
+    """Renders visual status bar e.g. [☕️][☕️][☕️][☕️][⚪️][🎁] with ASCII progress bar."""
     stamps = max(0, min(total, stamps))
-    icons = []
+    cups = []
     for i in range(1, total + 1):
         if i == total:
-            icons.append("🎁" if stamps >= total else "⭐")
+            cups.append("🎁" if stamps >= total else "⭐️")
         else:
-            icons.append("☕️" if i <= stamps else "⚪️")
-    return " ".join([f"[{ic}]" for ic in icons])
+            cups.append("☕️" if i <= stamps else "⚪️")
+    cups_str = " ".join([f"[{c}]" for c in cups])
+
+    filled = int(round((stamps / total) * 8))
+    pbar = "█" * filled + "░" * (8 - filled)
+    percent = int((stamps / total) * 100)
+
+    return f"{cups_str}\n<code>[{pbar}] {stamps}/{total} ({percent}%)</code>"
 
 def get_barista_panel_keyboard(target_user_id: int, stamps: int) -> InlineKeyboardMarkup:
     """Builds inline action buttons for Barista QR Scanner."""
-    buttons = [
-        [
-            InlineKeyboardButton(text="➕ +1 Muhr qo'shish", callback_data=f"quick_stamp:{target_user_id}:1"),
-            InlineKeyboardButton(text="➕ +2 Muhr qo'shish", callback_data=f"quick_stamp:{target_user_id}:2")
-        ]
-    ]
+    buttons = []
 
     if stamps >= 6:
         buttons.append([
             InlineKeyboardButton(
-                text="🎁 Bepul qahva berildi (0/6 qilish)",
+                text="🎁 BEPUL QAHVA BERILDI (0/6 qilish)",
                 callback_data=f"redeem_gift:{target_user_id}"
             )
         ])
 
     buttons.append([
-        InlineKeyboardButton(text="➖ -1 Muhr ayirish", callback_data=f"quick_stamp:{target_user_id}:-1"),
+        InlineKeyboardButton(text="☕️ +1 Qahva muhri", callback_data=f"quick_stamp:{target_user_id}:1"),
+        InlineKeyboardButton(text="☕️☕️ +2 Qahva muhri", callback_data=f"quick_stamp:{target_user_id}:2")
+    ])
+
+    buttons.append([
+        InlineKeyboardButton(text="➖ -1 Bekor qilish", callback_data=f"quick_stamp:{target_user_id}:-1"),
         InlineKeyboardButton(text="🔄 Yangilash", callback_data=f"refresh_client:{target_user_id}")
     ])
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 def format_barista_panel(name: str, username: str, target_id: int, stamps: int, rewards: int) -> str:
-    """Formats the Barista Control Panel message."""
+    """Formats the Barista Control Panel message with rich luxury coffee UI."""
     visual = render_visual_cups(stamps)
     member_code = f"GC-{str(target_id)[-6:]}"
+    user_tag = f" (@{username})" if username else ""
 
     if stamps >= 6:
-        status_line = "🎉 <b>DIQQAT: Mijoz 6 ta muhr to'pladi! Ushbu qahva mijoz uchun BEPUL!</b>"
+        banner = (
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "🎉 <b>DIQQAT: MIJOZ 6 TA MUHR YIG'DI!</b>\n"
+            "🎁 <b>Ushbu qahva mijoz uchun MUTLAQO BEPUL!</b>\n"
+            "<i>(Sovg'ani topshirgach, yuqoridagi oltin tugmani bosing)</i>\n"
+            "━━━━━━━━━━━━━━━━━━━━"
+        )
     elif stamps == 5:
-        status_line = "🔥 <b>Yana 1 ta qahvadan so'ng sovg'a BEPUL QAHVA!</b>"
+        banner = (
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "🔥 <b>Keyingi 1 ta qahvadan so'ng sovg'a BEPUL QAHVA!</b>\n"
+            "━━━━━━━━━━━━━━━━━━━━"
+        )
     else:
-        status_line = f"⏳ Yana <b>{6 - stamps} ta</b> qahvadan so'ng sovg'a tayyor."
+        banner = f"⏳ Bepul qahvagacha: yana <b>{6 - stamps} ta</b> muhr qoldi."
 
-    user_tag = f" (@{username})" if username else ""
     return (
-        "☕️ <b>Gusto Barista Paneli | Mijoz Sodiqlik Kartasi</b>\n\n"
-        f"👤 <b>Mijoz:</b> {name}{user_tag}\n"
-        f"🆔 <b>Telegram ID:</b> <code>{target_id}</code>\n"
-        f"🔖 <b>Mijoz kodi:</b> <code>{member_code}</code>\n\n"
-        f"📊 <b>To'plangan muhrlar:</b> <b>{stamps} / 6</b>\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        "☕️ <b>GUSTO COFFEE BAR | BARISTA PANELI</b>\n"
+        "━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"👤 <b>Mijoz:</b> <b>{name}</b>{user_tag}\n"
+        f"🔖 <b>Karta kodi:</b> <code>{member_code}</code>\n"
+        f"🆔 <b>Telegram ID:</b> <code>{target_id}</code>\n\n"
+        f"📊 <b>Sodiqlik balansi:</b>\n"
         f"{visual}\n\n"
-        f"{status_line}\n"
-        f"🏆 <b>Jami olingan sovg'alar:</b> {rewards} ta bepul qahva\n\n"
-        "⚡️ <i>Mijoz xaridiga qarab quyidagi amallardan birini tanlang:</i>"
+        f"{banner}\n\n"
+        f"🏆 <b>Avval berilgan sovg'alar:</b> {rewards} ta bepul qahva\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        "👇 <b>Barista tezkor amalini tanlang:</b>"
     )
 
 @router.callback_query(F.data.startswith("quick_stamp:"))
@@ -113,7 +132,10 @@ async def handle_quick_stamp(call: CallbackQuery, bot: Bot):
         kb = get_barista_panel_keyboard(target_user_id, new_stamps)
 
         await call.message.edit_text(text=sign_header + updated_text, parse_mode="HTML", reply_markup=kb)
-        await call.answer(f"{sign} muhr saqlandi!")
+        if free_awarded or new_stamps >= 6:
+            await call.answer("🎉 TABRIKLAYMIZ! Mijoz 6 ta muhr to'pladi va bepul qahva yutdi!", show_alert=True)
+        else:
+            await call.answer(f"✅ {sign} muhr saqlandi! ({new_stamps}/6)")
 
         # Notify Customer in private Telegram chat
         try:

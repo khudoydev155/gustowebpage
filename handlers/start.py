@@ -113,13 +113,12 @@ async def handle_start(message: Message, command: CommandObject, bot: Bot):
                 if user_id == target_id:
                     visual = render_visual_cups(stamps)
                     self_text = (
-                        "☕️ <b>Sizning Gusto Sodiqlik kartangiz:</b>\n\n"
-                        f"👤 <b>Ism:</b> {name}\n"
-                        f"🔖 <b>Karta kodi:</b> <code>GC-{str(target_id)[-6:]}</code>\n"
-                        f"📊 <b>To'plangan muhrlar:</b> <b>{stamps} / 6</b>\n"
+                        "☕️ <b>Sodiqlik kartangiz:</b>\n\n"
+                        f"👤 <b>{name}</b>\n"
+                        f"🔖 Kod: <code>GC-{str(target_id)[-6:]}</code>\n"
+                        f"📊 Balans: <b>{stamps} / 6 muhr</b>\n"
                         f"{visual}\n\n"
-                        "💡 <i>Bu sizning shaxsiy QR-kodingiz. Har gal qahva xarid qilganingizda ushbu kodni "
-                        "baristaga ko'rsating va 6-chi bepul qahvangizni qo'lga kiriting!</i>"
+                        "💡 <i>Qahva olayotganda ushbu QR-kodni baristaga ko'rsating — har 6-qahva bepul!</i>"
                     )
                     await message.answer(self_text, parse_mode="HTML")
                     return
@@ -133,7 +132,7 @@ async def handle_start(message: Message, command: CommandObject, bot: Bot):
 
                 # Case 3: Unauthorized stranger
                 await message.answer(
-                    "⚠️ <b>Ruxsat berilmagan:</b> Mijozlarga muhr qo'shish faqat Gusto Coffee xodimlari uchun!",
+                    "Muhr qo'shish faqat Gusto Coffee baristalari uchun ruxsat etilgan.",
                     parse_mode="HTML"
                 )
                 return
@@ -152,14 +151,9 @@ async def handle_start(message: Message, command: CommandObject, bot: Bot):
             logger.warning(f"Error auto-registering user {user_id} in Supabase: {e}")
 
     welcome_text = (
-        f"Assalomu alaykum, <b>{user_name}</b>!\n\n"
-        "☕️ <b>Gusto Coffee Bar</b>'ga xush kelibsiz.\n"
-        "<i>«Coffee worth slowing down for»</i> — Shoshilmaslikka arziydigan qahva falsafasi.\n\n"
-        "Quyidagi imkoniyatlardan foydalanishingiz mumkin:\n"
-        "• <b>☕️ Qahva menyusi</b> — Mini App'da barcha qahva va ichimliklarni ko'rish;\n"
-        "• <b>🌐 Gusto vebsayt</b> — asosiy veb-sahifamizni tomosha qilish;\n"
-        "• <b>📅 Stol band qilish</b> — chatdan chiqmasdan qulay joy bron qilish;\n"
-        "• <b>🎁 Sodiqlik kartasi</b> — har 6-qahvani sovg'a sifatida bepul olish."
+        f"Assalomu alaykum, <b>{user_name}</b>! ☕️\n\n"
+        "Gusto Coffee botiga xush kelibsiz.\n"
+        "Menyu bilan tanishishingiz, joy band qilishingiz yoki sodiqlik kartangizni ochishingiz mumkin:"
     )
     # Send persistent reply menu and inline welcome card
     await message.answer(
@@ -168,7 +162,7 @@ async def handle_start(message: Message, command: CommandObject, bot: Bot):
         reply_markup=get_reply_main_menu()
     )
     await message.answer(
-        text="Quyidagi bo'limlardan birini tanlang:",
+        text="Kerakli bo'limni tanlang 👇",
         reply_markup=get_main_menu_keyboard()
     )
 
@@ -176,12 +170,12 @@ async def handle_start(message: Message, command: CommandObject, bot: Bot):
 async def handle_menu_cmd(message: Message):
     menu_url = f"{settings.MINI_APP_URL}/#menu"
     await message.answer(
-        text="☕️ <b>Gusto Coffee interaktiv menyusi:</b>\nIchimliklar, shirinliklar va qahvalar bilan tanishing.",
+        text="☕️ <b>Gusto Coffee menyusi:</b>\nIchimliklar va qahvalar bilan tanishing.",
         parse_mode="HTML",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="☕️ Qahva menyusini ochish",
+                    text="☕️ Menyu (Mini App)",
                     web_app=WebAppInfo(url=menu_url)
                 ),
                 InlineKeyboardButton(
@@ -234,18 +228,18 @@ async def handle_my_bookings(message: Message):
     orders = await supabase_service.get_user_reservations(user_id)
     if not orders:
         await message.answer(
-            "📋 <b>Sizda hali faol stol bronlari mavjud emas.</b>\n\n"
+            "Sizda hali faol stol bronlari yo'q.\n"
             "Joy band qilish uchun «📅 Stol band qilish» tugmasidan foydalaning.",
             parse_mode="HTML"
         )
         return
 
-    text = "📋 <b>Sizning so'nggi stol bronlaringiz:</b>\n\n"
+    text = "📋 <b>Sizning stol bronlaringiz:</b>\n\n"
     for i, ord_item in enumerate(orders, 1):
         num = ord_item.get("order_number", "GC-••••")
         note = ord_item.get("note", "")
         status = ord_item.get("status", "open")
-        status_text = "🟢 Qabul qilingan" if status == "open" else f"⚪️ {status}"
+        status_text = "🟢 Qabul qilindi" if status == "open" else f"⚪️ {status}"
 
         details = ""
         if "|" in note:
@@ -253,7 +247,7 @@ async def handle_my_bookings(message: Message):
             if parts:
                 details = "\n" + " • ".join(parts)
 
-        text += f"{i}. <b>{num}</b> ({status_text}){details}\n📍 Filial: Gusto Xonqa\n\n"
+        text += f"{i}. <b>{num}</b> ({status_text}){details}\n\n"
 
     await message.answer(text=text, parse_mode="HTML")
 
@@ -261,18 +255,15 @@ async def handle_my_bookings(message: Message):
 @router.message(F.text.contains("Manzil"))
 async def handle_info_location(event: CallbackQuery | Message):
     text = (
-        "📍 <b>Gusto Coffee Bar manzillari:</b>\n\n"
-        "🏢 <b>Xonqa filiali:</b>\n"
-        "Xorazm viloyati, Xonqa tumani, Mustaqillik ko‘chasi, 24-uy\n"
-        "⏰ <b>Ish vaqti:</b>\n"
-        "Dushanba – Shanba: 08:00 – 23:00\n"
-        "Yakshanba: 09:00 – 23:00\n\n"
-        "🚗 Mo‘ljal: Markaziy maydon, Xonqa dehqon bozori yaqinida."
+        "📍 <b>Gusto Coffee Xonqa</b>\n\n"
+        "🏢 Mustaqillik ko‘chasi, 24-uy\n"
+        "🚗 Mo‘ljal: Dehqon bozori yaqinida\n"
+        "⏰ Har kuni: 08:00 – 23:00"
     )
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(
-                text="🗺 Xaritada ochish (Google Maps)",
+                text="🗺 Xaritada ko'rish (Google Maps)",
                 url="https://maps.app.goo.gl/9XygkJ35KZSzZzg88"
             )
         ],
@@ -293,16 +284,16 @@ async def handle_info_location(event: CallbackQuery | Message):
 @router.message(F.text.contains("Aloqa"))
 async def handle_info_contact(event: CallbackQuery | Message):
     text = (
-        "📞 <b>Gusto Coffee bilan bog‘lanish:</b>\n\n"
-        "📱 <b>Telefon:</b> <code>+998932875484</code> (nusxa olish uchun bosing)\n"
-        "✉️ <b>Email:</b> info@gustocoffee.uz\n"
-        "💬 <b>Telegram:</b> @gustobronbot\n\n"
-        "Savollaringiz yoki takliflaringiz bo‘lsa, xursandchilik bilan javob beramiz!"
+        "📞 <b>Aloqa</b>\n\n"
+        "📱 Telefon: <code>+998932875484</code>\n"
+        "💬 Telegram: @gustobronbot\n"
+        "✉️ Email: info@gustocoffee.uz\n\n"
+        "Savollaringiz bo'lsa, xursandchilik bilan yordam beramiz!"
     )
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(
-                text="🌐 Gusto Vebsayt",
+                text="🌐 Gusto vebsayt",
                 web_app=WebAppInfo(url=settings.MINI_APP_URL)
             )
         ],
@@ -322,7 +313,7 @@ async def handle_info_contact(event: CallbackQuery | Message):
 @router.callback_query(F.data == "back_to_menu")
 async def handle_back_to_menu(call: CallbackQuery):
     await call.message.edit_text(
-        text="☕️ <b>Gusto Coffee Bar</b> bosh menyusi:",
+        text="☕️ <b>Gusto Coffee</b> bosh menyusi:",
         parse_mode="HTML",
         reply_markup=get_main_menu_keyboard()
     )
@@ -358,14 +349,12 @@ async def handle_web_app_data(message: Message, bot: Bot):
 
             # Reply to user
             confirmation_user = (
-                "✅ <b>Stol muvaffaqiyatli band qilindi!</b>\n\n"
-                f"🔖 <b>Bron kodi:</b> <code>#{booking_code}</code>\n"
-                f"👤 <b>Mehmon:</b> {name}\n"
-                f"📞 <b>Telefon:</b> {phone}\n"
-                f"📅 <b>Sana/Vaqt:</b> {date} soat {time}\n"
-                f"👥 <b>Mehmonlar:</b> {guests} kishi\n"
-                f"📍 <b>Filial:</b> {location}\n\n"
-                "☕️ Sizni Gusto Coffee'da intiqlik bilan kutamiz!"
+                "✅ <b>Stol bron qilindi!</b>\n\n"
+                f"🔖 Bron kodi: <code>#{booking_code}</code>\n"
+                f"📅 {date}, soat {time}\n"
+                f"👥 {guests} kishi\n"
+                f"📍 {location}\n\n"
+                "Sizni kutamiz! ☕️"
             )
             await message.answer(confirmation_user, parse_mode="HTML")
 
@@ -398,14 +387,7 @@ async def handle_web_app_data(message: Message, bot: Bot):
 
 @router.message()
 async def handle_default_fallback(message: Message):
-    text = (
-        "☕️ <b>Gusto Coffee Bot</b> xizmatidasiz!\n\n"
-        "Quyidagi menyu tugmalaridan birini tanlashingiz mumkin:\n\n"
-        "• ☕️ <b>Qahva menyusi</b> — Ichimliklar ro'yxati\n"
-        "• 📅 <b>Stol band qilish</b> — Qulay vaqtga joy bron qilish\n"
-        "• 🎁 <b>Sodiqlik kartam</b> — Muhrlaringiz va bepul kofe\n"
-        "• 📋 <b>Bronlarim</b> — Faol buyurtmalaringiz\n"
-        "• 📍 <b>Manzil va Ish vaqti</b> — Filial joylashuvi\n"
-        "• 📞 <b>Aloqa</b> — Biz bilan bog'lanish"
+    await message.answer(
+        "Kerakli bo'limni quyidagi menyudan tanlang 👇",
+        reply_markup=get_reply_main_menu()
     )
-    await message.answer(text=text, parse_mode="HTML", reply_markup=get_reply_main_menu())

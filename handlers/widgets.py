@@ -152,12 +152,12 @@ async def process_raw_widget_query(bot: Bot, widget_query: dict):
         # 5. Send confirmation message directly to guest in private chat
         try:
             guest_msg = (
-                "✅ <b>Stol muvaffaqiyatli band qilindi!</b>\n\n"
-                f"🔖 <b>Bron kodi:</b> <code>#{booking_code}</code>\n"
-                f"📅 <b>Tashrif vaqti:</b> {day_text}, soat {time_slot}\n"
-                f"👥 <b>Mehmonlar soni:</b> {guests} kishi\n"
-                f"📍 <b>Filial:</b> Gusto Coffee Xonqa filiali\n\n"
-                "☕️ Sizni Gusto Coffee'da intiqlik bilan kutamiz!"
+                "✅ <b>Stol bron qilindi!</b>\n\n"
+                f"🔖 Bron kodi: <code>#{booking_code}</code>\n"
+                f"📅 {day_text}, soat {time_slot}\n"
+                f"👥 {guests} kishi\n"
+                f"📍 Gusto Coffee Xonqa\n\n"
+                "Sizni kutamiz! ☕️"
             )
             await bot.send_message(chat_id=user_id, text=guest_msg, parse_mode="HTML")
         except Exception as e:

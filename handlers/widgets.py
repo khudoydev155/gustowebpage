@@ -64,50 +64,67 @@ async def process_raw_widget_query(bot: Bot, widget_query: dict):
     logger.info(f"Received widget_query from user {user_id} ({user_name}): data={data_str}")
 
     if data_str.startswith("res:"):
-        # Format: "res:day:time:guests"
+        # Format: "res:day:time:guests" (e.g. "res:bugun:19:30:2" or "res:ertaga:18:00:4")
         parts = data_str.split(":")
         day = parts[1] if len(parts) > 1 else "bugun"
-        time_slot = parts[2] if len(parts) > 2 else "18:00"
-        guests = parts[3] if len(parts) > 3 else "2"
+        if len(parts) >= 5:
+            time_slot = f"{parts[2]}:{parts[3]}"
+            guests = parts[4]
+        else:
+            time_slot = parts[2] if len(parts) > 2 else "18:00"
+            guests = parts[3] if len(parts) > 3 else "2"
         day_text = "Bugun" if day == "bugun" else ("Ertaga" if day == "ertaga" else "Indinga")
 
         # 1. Save reservation into Supabase Orders table
-        booking_code, _ = await supabase_service.create_table_reservation(
-            telegram_id=user_id,
-            name=user_name,
-            day=day,
-            time=time_slot,
-            guests=guests
-        )
+        import random
+        booking_code = f"GC-{random.randint(1000, 9999)}"
+        try:
+            db_code, _ = await supabase_service.create_table_reservation(
+                telegram_id=user_id,
+                name=user_name,
+                day=day,
+                time=time_slot,
+                guests=guests
+            )
+            if db_code:
+                booking_code = db_code
+        except Exception as e:
+            logger.error(f"Error saving reservation in Supabase: {e}")
 
         # 2. Answer widget query with confirmation data
-        res_payload = json.dumps({
-            "status": "confirmed",
-            "booking_code": booking_code,
-            "day": day,
-            "time": time_slot,
-            "guests": guests
-        })
-        await widget_service.answer_widget_query(
-            widget_query_id=query_id,
-            data=res_payload
-        )
+        try:
+            res_payload = json.dumps({
+                "status": "confirmed",
+                "booking_code": booking_code,
+                "day": day,
+                "time": time_slot,
+                "guests": guests
+            })
+            await widget_service.answer_widget_query(
+                widget_query_id=query_id,
+                data=res_payload
+            )
+        except Exception as e:
+            logger.warning(f"Error answering widget query: {e}")
 
         # 3. Update widget UI state in chat
         if chat_id and message_id:
-            await widget_service.edit_widget_data(
-                chat_id=chat_id,
-                message_id=message_id,
-                new_data={
-                    "status": "confirmed",
-                    "booking_code": booking_code,
-                    "day": day,
-                    "time": time_slot,
-                    "guests": guests
-                }
-            )
+            try:
+                await widget_service.edit_widget_data(
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    new_data={
+                        "status": "confirmed",
+                        "booking_code": booking_code,
+                        "day": day,
+                        "time": time_slot,
+                        "guests": guests
+                    }
+                )
+            except Exception as e:
+                logger.warning(f"Error editing widget data: {e}")
 
-        # 4. Notify Admin / Barista Group
+        # 4. Notify Admin / Barista Group (-5392092158)
         user_info = f"{user_name}" + (f" (@{username})" if username else "")
         admin_alert = (
             "🔔 <b>YANGI STOL BAND QILINDI (HTML Vidjet)</b>\n\n"
@@ -122,14 +139,29 @@ async def process_raw_widget_query(bot: Bot, widget_query: dict):
         )
         if settings.ADMIN_CHAT_ID:
             try:
-                await bot.send_message(
-                    chat_id=settings.ADMIN_CHAT_ID,
+                target_chat = int(settings.ADMIN_CHAT_ID) if str(settings.ADMIN_CHAT_ID).lstrip("-").isdigit() else settings.ADMIN_CHAT_ID
+                sent_msg = await bot.send_message(
+                    chat_id=target_chat,
                     text=admin_alert,
                     parse_mode="HTML"
                 )
-                logger.info(f"Reservation #{booking_code} forwarded to admin chat {settings.ADMIN_CHAT_ID}")
+                logger.info(f"Reservation #{booking_code} forwarded to admin chat {settings.ADMIN_CHAT_ID} (msg_id={sent_msg.message_id})")
             except Exception as e:
-                logger.warning(f"Could not forward widget booking to admin chat: {e}")
+                logger.error(f"Could not forward widget booking to admin chat: {e}", exc_info=True)
+
+        # 5. Send confirmation message directly to guest in private chat
+        try:
+            guest_msg = (
+                "✅ <b>Stol muvaffaqiyatli band qilindi!</b>\n\n"
+                f"🔖 <b>Bron kodi:</b> <code>#{booking_code}</code>\n"
+                f"📅 <b>Tashrif vaqti:</b> {day_text}, soat {time_slot}\n"
+                f"👥 <b>Mehmonlar soni:</b> {guests} kishi\n"
+                f"📍 <b>Filial:</b> Gusto Coffee Xonqa filiali\n\n"
+                "☕️ Sizni Gusto Coffee'da intiqlik bilan kutamiz!"
+            )
+            await bot.send_message(chat_id=user_id, text=guest_msg, parse_mode="HTML")
+        except Exception as e:
+            logger.debug(f"Could not send direct confirmation to user: {e}")
 
     elif data_str == "loyalty:refresh":
         # Fetch live card from Supabase

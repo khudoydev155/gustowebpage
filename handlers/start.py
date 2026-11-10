@@ -14,6 +14,12 @@ from aiogram.types import (
 from config import settings
 from services.supabase_service import supabase_service
 from utils.widget_sender import WidgetService
+from handlers.admin import (
+    is_employee,
+    format_barista_panel,
+    get_barista_panel_keyboard,
+    render_visual_cups
+)
 
 logger = logging.getLogger(__name__)
 router = Router(name="start")
@@ -86,7 +92,7 @@ def get_main_menu_keyboard() -> InlineKeyboardMarkup:
     )
 
 @router.message(CommandStart())
-async def handle_start(message: Message, command: CommandObject):
+async def handle_start(message: Message, command: CommandObject, bot: Bot):
     user = message.from_user
     user_name = user.first_name if user else "qadrli mehmon"
     username = user.username if user else ""
@@ -99,21 +105,36 @@ async def handle_start(message: Message, command: CommandObject):
             card = await supabase_service.get_loyalty_card(target_id)
             if card:
                 stamps = card.get("stamps", 0)
+                rewards = card.get("free_coffees_earned", 0)
                 name = card.get("fullname", "Mehmon")
-                kb = InlineKeyboardMarkup(inline_keyboard=[
-                    [
-                        InlineKeyboardButton(text="➕ +1 Muhr qo'shish", callback_data=f"quick_stamp:{target_id}:1"),
-                        InlineKeyboardButton(text="➖ -1 Muhr ayirish", callback_data=f"quick_stamp:{target_id}:-1")
-                    ]
-                ])
+                target_username = card.get("username", "")
+
+                # Case 1: Customer scans their own card
+                if user_id == target_id:
+                    visual = render_visual_cups(stamps)
+                    self_text = (
+                        "☕️ <b>Sizning Gusto Sodiqlik kartangiz:</b>\n\n"
+                        f"👤 <b>Ism:</b> {name}\n"
+                        f"🔖 <b>Karta kodi:</b> <code>GC-{str(target_id)[-6:]}</code>\n"
+                        f"📊 <b>To'plangan muhrlar:</b> <b>{stamps} / 6</b>\n"
+                        f"{visual}\n\n"
+                        "💡 <i>Bu sizning shaxsiy QR-kodingiz. Har gal qahva xarid qilganingizda ushbu kodni "
+                        "baristaga ko'rsating va 6-chi bepul qahvangizni qo'lga kiriting!</i>"
+                    )
+                    await message.answer(self_text, parse_mode="HTML")
+                    return
+
+                # Case 2: Employee/Barista scans customer's card
+                if await is_employee(bot, user_id):
+                    panel_text = format_barista_panel(name, target_username, target_id, stamps, rewards)
+                    kb = get_barista_panel_keyboard(target_id, stamps)
+                    await message.answer(panel_text, parse_mode="HTML", reply_markup=kb)
+                    return
+
+                # Case 3: Unauthorized stranger
                 await message.answer(
-                    f"☕️ <b>Mijoz topildi (QR skaner):</b>\n\n"
-                    f"👤 <b>Ism:</b> {name}\n"
-                    f"🆔 <b>Telegram ID:</b> <code>{target_id}</code>\n"
-                    f"☕️ <b>Joriy muhrlar:</b> {stamps} / 6\n\n"
-                    f"Barista uchun tezkor boshqaruv:",
-                    parse_mode="HTML",
-                    reply_markup=kb
+                    "⚠️ <b>Ruxsat berilmagan:</b> Mijozlarga muhr qo'shish faqat Gusto Coffee xodimlari uchun!",
+                    parse_mode="HTML"
                 )
                 return
         except Exception as e:

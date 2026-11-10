@@ -1,4 +1,5 @@
 import logging
+from typing import Tuple, Optional, Dict, Any
 from aiogram import Router, Bot, F
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
@@ -8,8 +9,90 @@ from services.supabase_service import supabase_service
 logger = logging.getLogger(__name__)
 router = Router(name="admin")
 
+async def is_employee(bot: Bot, user_id: int) -> bool:
+    """
+    Checks if the user is an authorized Gusto employee/barista.
+    Any member or admin of the Barista group (-5392092158) is authorized.
+    """
+    if not user_id:
+        return False
+    try:
+        chat_id = int(settings.ADMIN_CHAT_ID) if str(settings.ADMIN_CHAT_ID).lstrip("-").isdigit() else settings.ADMIN_CHAT_ID
+        member = await bot.get_chat_member(chat_id=chat_id, user_id=user_id)
+        if member.status in ("creator", "administrator", "member"):
+            return True
+    except Exception as e:
+        logger.debug(f"is_employee check failed for {user_id}: {e}")
+    return False
+
+def render_visual_cups(stamps: int, total: int = 6) -> str:
+    """Renders visual status bar e.g. [☕️][☕️][☕️][☕️][⚪️][🎁]"""
+    stamps = max(0, min(total, stamps))
+    icons = []
+    for i in range(1, total + 1):
+        if i == total:
+            icons.append("🎁" if stamps >= total else "⭐")
+        else:
+            icons.append("☕️" if i <= stamps else "⚪️")
+    return " ".join([f"[{ic}]" for ic in icons])
+
+def get_barista_panel_keyboard(target_user_id: int, stamps: int) -> InlineKeyboardMarkup:
+    """Builds inline action buttons for Barista QR Scanner."""
+    buttons = [
+        [
+            InlineKeyboardButton(text="➕ +1 Muhr qo'shish", callback_data=f"quick_stamp:{target_user_id}:1"),
+            InlineKeyboardButton(text="➕ +2 Muhr qo'shish", callback_data=f"quick_stamp:{target_user_id}:2")
+        ]
+    ]
+
+    if stamps >= 6:
+        buttons.append([
+            InlineKeyboardButton(
+                text="🎁 Bepul qahva berildi (0/6 qilish)",
+                callback_data=f"redeem_gift:{target_user_id}"
+            )
+        ])
+
+    buttons.append([
+        InlineKeyboardButton(text="➖ -1 Muhr ayirish", callback_data=f"quick_stamp:{target_user_id}:-1"),
+        InlineKeyboardButton(text="🔄 Yangilash", callback_data=f"refresh_client:{target_user_id}")
+    ])
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+def format_barista_panel(name: str, username: str, target_id: int, stamps: int, rewards: int) -> str:
+    """Formats the Barista Control Panel message."""
+    visual = render_visual_cups(stamps)
+    member_code = f"GC-{str(target_id)[-6:]}"
+
+    if stamps >= 6:
+        status_line = "🎉 <b>DIQQAT: Mijoz 6 ta muhr to'pladi! Ushbu qahva mijoz uchun BEPUL!</b>"
+    elif stamps == 5:
+        status_line = "🔥 <b>Yana 1 ta qahvadan so'ng sovg'a BEPUL QAHVA!</b>"
+    else:
+        status_line = f"⏳ Yana <b>{6 - stamps} ta</b> qahvadan so'ng sovg'a tayyor."
+
+    user_tag = f" (@{username})" if username else ""
+    return (
+        "☕️ <b>Gusto Barista Paneli | Mijoz Sodiqlik Kartasi</b>\n\n"
+        f"👤 <b>Mijoz:</b> {name}{user_tag}\n"
+        f"🆔 <b>Telegram ID:</b> <code>{target_id}</code>\n"
+        f"🔖 <b>Mijoz kodi:</b> <code>{member_code}</code>\n\n"
+        f"📊 <b>To'plangan muhrlar:</b> <b>{stamps} / 6</b>\n"
+        f"{visual}\n\n"
+        f"{status_line}\n"
+        f"🏆 <b>Jami olingan sovg'alar:</b> {rewards} ta bepul qahva\n\n"
+        "⚡️ <i>Mijoz xaridiga qarab quyidagi amallardan birini tanlang:</i>"
+    )
+
 @router.callback_query(F.data.startswith("quick_stamp:"))
 async def handle_quick_stamp(call: CallbackQuery, bot: Bot):
+    """Barista clicks +1 or +2 stamps on customer profile."""
+    # 1. Authorization check
+    if not await is_employee(bot, call.from_user.id):
+        await call.answer("⚠️ Ushbu amal faqat Gusto xodimlari uchun ruxsat etilgan!", show_alert=True)
+        return
+
     parts = call.data.split(":")
     target_user_id = int(parts[1])
     count = int(parts[2])
@@ -19,61 +102,162 @@ async def handle_quick_stamp(call: CallbackQuery, bot: Bot):
             telegram_id=target_user_id,
             count=count
         )
-        sign = f"+{count}" if count > 0 else str(count)
-        text = (
-            f"✅ <b>Muhr o'zgartirildi ({sign}):</b>\n\n"
-            f"👤 <b>Mijoz ID:</b> <code>{target_user_id}</code>\n"
-            f"☕️ <b>Yangi balans:</b> {new_stamps} / 6 muhr\n"
-        )
-        if free_awarded:
-            text += "\n🎁 <b>Mijoz 6 ta muhr to'pladi va BEPUL QAHVA yutdi!</b>"
+        rewards = card.get("free_coffees_earned", 0) if card else 0
+        name = card.get("fullname", "Mehmon") if card else "Mehmon"
+        username = card.get("username", "") if card else ""
 
-        kb = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(text="➕ Yana +1 qo'shish", callback_data=f"quick_stamp:{target_user_id}:1"),
-                InlineKeyboardButton(text="➖ -1 ayirish", callback_data=f"quick_stamp:{target_user_id}:-1")
-            ]
-        ])
-        await call.message.edit_text(text=text, parse_mode="HTML", reply_markup=kb)
+        # Update Barista message
+        updated_text = format_barista_panel(name, username, target_user_id, new_stamps, rewards)
+        sign = f"+{count}" if count > 0 else str(count)
+        sign_header = f"✅ <b>Muhr o'zgartirildi ({sign}):</b>\n\n"
+        kb = get_barista_panel_keyboard(target_user_id, new_stamps)
+
+        await call.message.edit_text(text=sign_header + updated_text, parse_mode="HTML", reply_markup=kb)
         await call.answer(f"{sign} muhr saqlandi!")
 
-        # Notify user
+        # Notify Customer in private Telegram chat
         try:
-            if free_awarded:
+            if free_awarded or new_stamps >= 6:
                 user_msg = (
-                    "🎉 <b>TABRIKLAYMIZ!</b>\n\n"
+                    "🎉 <b>TABRIKLAYMIZ! BEPUL QAHVA!</b>\n\n"
                     "Siz Gusto Coffee Club'da <b>6 ta muhr</b> yig'dingiz va <b>BEPUL QAHVA</b> yutib oldingiz! ☕️🎁\n\n"
-                    "Baristadan bepul qahvangizni qabul qiling!"
+                    "Baristaga ushbu xabarni ko'rsatib, bepul qahvangizni qabul qiling!"
                 )
             else:
                 user_msg = (
                     f"☕️ <b>Gusto Coffee Club:</b>\n\n"
-                    f"Kartangizga <b>{sign} muhr</b> qo'shildi!\n"
-                    f"Joriy balansingiz: <b>{new_stamps}/6 muhr</b>."
+                    f"Kartangizga <b>{sign} muhr</b> qo'shildi! ☕️\n"
+                    f"Joriy balansingiz: <b>{new_stamps} / 6 muhr</b>.\n"
+                    f"Yana <b>{6 - new_stamps} ta</b> qahvadan so'ng sovg'angiz tayyor!"
                 )
             await bot.send_message(chat_id=target_user_id, text=user_msg, parse_mode="HTML")
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Could not deliver direct notification to user {target_user_id}: {e}")
+
+        # Audit notification to Admin/Barista group
+        if settings.ADMIN_CHAT_ID:
+            try:
+                target_chat = int(settings.ADMIN_CHAT_ID) if str(settings.ADMIN_CHAT_ID).lstrip("-").isdigit() else settings.ADMIN_CHAT_ID
+                barista_name = call.from_user.full_name
+                group_alert = (
+                    "☕️ <b>SODIQLIK MUHRI BERILDI</b>\n\n"
+                    f"👤 <b>Barista:</b> {barista_name} (@{call.from_user.username or '-'})\n"
+                    f"🎯 <b>Mijoz:</b> {name} (<code>GC-{str(target_user_id)[-6:]}</code>)\n"
+                    f"⚡️ <b>Amal:</b> {sign} muhr\n"
+                    f"📊 <b>Yangi balans:</b> {new_stamps} / 6 muhr"
+                )
+                await bot.send_message(chat_id=target_chat, text=group_alert, parse_mode="HTML")
+            except Exception as e:
+                logger.warning(f"Error logging stamp action to group: {e}")
 
     except Exception as e:
         logger.error(f"Error handling quick_stamp: {e}")
         await call.answer(f"Xatolik: {e}", show_alert=True)
 
+@router.callback_query(F.data.startswith("redeem_gift:"))
+async def handle_redeem_gift(call: CallbackQuery, bot: Bot):
+    """Barista hands over free coffee and resets customer stamps modulo 6."""
+    if not await is_employee(bot, call.from_user.id):
+        await call.answer("⚠️ Ushbu amal faqat Gusto xodimlari uchun ruxsat etilgan!", show_alert=True)
+        return
+
+    parts = call.data.split(":")
+    target_user_id = int(parts[1])
+
+    try:
+        # Reset stamps to 0 (or subtract 6)
+        card = await supabase_service.get_loyalty_card(target_user_id)
+        current_stamps = card.get("stamps", 0) if card else 0
+        current_rewards = card.get("free_coffees_earned", 0) if card else 0
+        name = card.get("fullname", "Mehmon") if card else "Mehmon"
+        username = card.get("username", "") if card else ""
+
+        new_stamps = max(0, current_stamps - 6)
+        new_rewards = current_rewards + 1
+
+        url = f"{supabase_service.base_url}/rest/v1/loyalty_cards?telegram_id=eq.{target_user_id}"
+        payload = {"stamps": new_stamps, "free_coffees_earned": new_rewards}
+        import aiohttp
+        async with aiohttp.ClientSession() as session:
+            await session.patch(url, headers=supabase_service._headers(), json=payload)
+
+        # Update Barista message
+        updated_text = format_barista_panel(name, username, target_user_id, new_stamps, new_rewards)
+        kb = get_barista_panel_keyboard(target_user_id, new_stamps)
+        header = "🎁 <b>BEPUL QAHVA TOPSHIRILDI! Tsikl yangilandi (0/6):</b>\n\n"
+        await call.message.edit_text(text=header + updated_text, parse_mode="HTML", reply_markup=kb)
+        await call.answer("🎁 Bepul qahva muvaffaqiyatli topshirildi!", show_alert=True)
+
+        # Notify Customer
+        try:
+            user_msg = (
+                "🎁 <b>Bepul qahvangizdan bahramand bo'ling!</b> ☕️✨\n\n"
+                "Gusto Coffee Club'da sovg'angiz topshirildi. Yangi sodiqlik tsikli boshlandi (0/6 muhr).\n"
+                "Har gal qahva xarid qilganingizda yana muhr yig'ishda davom eting!"
+            )
+            await bot.send_message(chat_id=target_user_id, text=user_msg, parse_mode="HTML")
+        except Exception:
+            pass
+
+        # Audit notification to Barista group
+        if settings.ADMIN_CHAT_ID:
+            try:
+                target_chat = int(settings.ADMIN_CHAT_ID) if str(settings.ADMIN_CHAT_ID).lstrip("-").isdigit() else settings.ADMIN_CHAT_ID
+                barista_name = call.from_user.full_name
+                group_alert = (
+                    "🎁 <b>BEPUL QAHVA TOPSHIRILDI</b>\n\n"
+                    f"👤 <b>Barista:</b> {barista_name} (@{call.from_user.username or '-'})\n"
+                    f"🎯 <b>Mijoz:</b> {name} (<code>GC-{str(target_user_id)[-6:]}</code>)\n"
+                    "🎉 <b>Sovg'a:</b> 6-chi bepul qahva muvaffaqiyatli berildi!"
+                )
+                await bot.send_message(chat_id=target_chat, text=group_alert, parse_mode="HTML")
+            except Exception as e:
+                logger.warning(f"Error logging gift redemption to group: {e}")
+
+    except Exception as e:
+        logger.error(f"Error handling redeem_gift: {e}")
+        await call.answer(f"Xatolik: {e}", show_alert=True)
+
+@router.callback_query(F.data.startswith("refresh_client:"))
+async def handle_refresh_client(call: CallbackQuery, bot: Bot):
+    """Refreshes customer panel data."""
+    parts = call.data.split(":")
+    target_user_id = int(parts[1])
+
+    card = await supabase_service.get_loyalty_card(target_user_id)
+    if not card:
+        await call.answer("Mijoz topilmadi!", show_alert=True)
+        return
+
+    stamps = card.get("stamps", 0)
+    rewards = card.get("free_coffees_earned", 0)
+    name = card.get("fullname", "Mehmon")
+    username = card.get("username", "")
+
+    panel_text = format_barista_panel(name, username, target_user_id, stamps, rewards)
+    kb = get_barista_panel_keyboard(target_user_id, stamps)
+    try:
+        await call.message.edit_text(text=panel_text, parse_mode="HTML", reply_markup=kb)
+        await call.answer("Ma'lumotlar yangilandi!")
+    except Exception:
+        await call.answer("Eng so'nggi ma'lumotlar ko'rsatilmoqda.")
 
 @router.message(Command("stamp"))
 async def handle_stamp_command(message: Message, bot: Bot):
     """
     Usage: /stamp <telegram_id> [count]
-    Example: /stamp 8440689118 1
-    Used by baristas to add or remove loyalty stamps.
+    Manually award stamps via text command.
     """
+    if not await is_employee(bot, message.from_user.id):
+        await message.reply("⚠️ Ushbu buyruq faqat Gusto xodimlari uchun!")
+        return
+
     args = message.text.split()[1:] if message.text else []
     if not args:
         await message.reply(
             "⚠️ <b>Foydalanish tartibi:</b>\n"
             "<code>/stamp &lt;telegram_id&gt; [soni]</code>\n\n"
-            "Masalan: <code>/stamp 8440689118 1</code> (1 ta muhr qo'shish)\n"
-            "yoki: <code>/stamp 8440689118 -1</code> (1 ta muhr ayirish)",
+            "Masalan: <code>/stamp 1161063594 1</code> (+1 muhr qo'shish)",
             parse_mode="HTML"
         )
         return
@@ -84,59 +268,30 @@ async def handle_stamp_command(message: Message, bot: Bot):
         await message.reply("❌ Telegram ID raqam bo'lishi kerak!")
         return
 
-    count = 1
-    if len(args) > 1:
-        try:
-            count = int(args[1])
-        except ValueError:
-            count = 1
+    count = int(args[1]) if len(args) > 1 and args[1].lstrip("-").isdigit() else 1
 
     try:
         new_stamps, free_awarded, card = await supabase_service.add_loyalty_stamps(
             telegram_id=target_user_id,
             count=count
         )
+        rewards = card.get("free_coffees_earned", 0) if card else 0
+        name = card.get("fullname", "Mehmon") if card else "Mehmon"
+        username = card.get("username", "") if card else ""
 
-        sign = f"+{count}" if count > 0 else str(count)
-        admin_reply = (
-            f"✅ <b>Muhr muvaffaqiyatli o'zgartirildi ({sign}):</b>\n\n"
-            f"👤 <b>Mijoz ID:</b> <code>{target_user_id}</code>\n"
-            f"☕️ <b>Yangi balans:</b> {new_stamps} / 6 muhr\n"
-        )
-        if free_awarded:
-            admin_reply += "\n🎁 <b>Mijoz 6 ta muhr yig'di va BEPUL QAHVA yutdi!</b>"
-
-        await message.reply(admin_reply, parse_mode="HTML")
-
-        # Notify the user directly in Telegram
-        try:
-            if free_awarded:
-                user_msg = (
-                    "🎉 <b>TABRIKLAYMIZ!</b>\n\n"
-                    "Siz Gusto Coffee Club'da <b>6 ta muhr</b> yig'dingiz va <b>BEPUL QAHVA</b> sovg'asini qo'lga kiritdingiz! ☕️🎁\n\n"
-                    "Baristaga ushbu xabarni yoki Sodiqlik kartangizni ko'rsatib, sovg'angizni qabul qiling!"
-                )
-            else:
-                user_msg = (
-                    f"☕️ <b>Gusto Coffee Club:</b>\n\n"
-                    f"Sizning kartangizga <b>{sign} muhr</b> qo'shildi!\n"
-                    f"Joriy balansingiz: <b>{new_stamps}/6 muhr</b>.\n"
-                    f"Yana <b>{6 - new_stamps} ta</b> qahvadan so'ng sovg'angiz tayyor!"
-                )
-            await bot.send_message(chat_id=target_user_id, text=user_msg, parse_mode="HTML")
-        except Exception as e:
-            logger.info(f"Could not deliver direct notification to user {target_user_id}: {e}")
-
+        panel = format_barista_panel(name, username, target_user_id, new_stamps, rewards)
+        kb = get_barista_panel_keyboard(target_user_id, new_stamps)
+        await message.reply(panel, parse_mode="HTML", reply_markup=kb)
     except Exception as ex:
-        logger.error(f"Error executing /stamp command: {ex}")
         await message.reply(f"❌ Xatolik yuz berdi: {ex}")
 
 @router.message(Command("user"))
-async def handle_user_command(message: Message):
-    """
-    Usage: /user <telegram_id>
-    Checks customer's loyalty profile.
-    """
+async def handle_user_command(message: Message, bot: Bot):
+    """Usage: /user <telegram_id>"""
+    if not await is_employee(bot, message.from_user.id):
+        await message.reply("⚠️ Ushbu buyruq faqat Gusto xodimlari uchun!")
+        return
+
     args = message.text.split()[1:] if message.text else []
     if not args:
         await message.reply("Foydalanish: <code>/user &lt;telegram_id&gt;</code>", parse_mode="HTML")
@@ -158,15 +313,9 @@ async def handle_user_command(message: Message):
     fullname = card.get("fullname", "Noma'lum")
     username = card.get("username", "-")
 
-    info = (
-        "📋 <b>Gusto Sodiqlik Kartasi:</b>\n\n"
-        f"👤 <b>Ism:</b> {fullname}\n"
-        f"💬 <b>Username:</b> @{username}\n"
-        f"🆔 <b>Telegram ID:</b> <code>{target_user_id}</code>\n"
-        f"☕️ <b>Joriy muhrlar:</b> {stamps} / 6\n"
-        f"🎁 <b>Yutilgan bepul qahvalar:</b> {rewards} ta"
-    )
-    await message.reply(info, parse_mode="HTML")
+    panel = format_barista_panel(fullname, username, target_user_id, stamps, rewards)
+    kb = get_barista_panel_keyboard(target_user_id, stamps)
+    await message.reply(panel, parse_mode="HTML", reply_markup=kb)
 
 @router.message(Command("tables"))
 async def handle_tables_command(message: Message):
@@ -182,4 +331,3 @@ async def handle_tables_command(message: Message):
         text += f"{status_icon} <b>{t.get('name')}</b> — holati: <code>{t.get('status')}</code>\n"
 
     await message.reply(text, parse_mode="HTML")
-

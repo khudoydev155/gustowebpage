@@ -8,45 +8,43 @@
 :root{--bg:var(--tg-theme-bg-color,#0C0A08);--c:var(--tg-theme-secondary-bg-color,#181410);--b:#2C241C;--g:var(--tg-theme-button-color,#C6924D);--gl:#E6C387;--t:var(--tg-theme-text-color,#F5F1EA);--m:var(--tg-theme-hint-color,#A89F91);--r:10px}
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent;user-select:none}
 body{background:var(--bg);color:var(--t);padding:10px;font-size:12px;line-height:1.3;display:flex;flex-direction:column;gap:8px}
-.hdr{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b);padding-bottom:6px;gap:8px}
-.hdr b{font-size:13px;color:var(--t);letter-spacing:.3px;white-space:nowrap}
-.tag{font-size:10px;background:rgba(198,146,77,.15);color:var(--g);padding:2px 7px;border-radius:12px;border:1px solid rgba(198,146,77,.3);font-weight:600;white-space:nowrap;flex-shrink:0}
-.banner{background:linear-gradient(145deg,#221B13,#14110E);border:1px solid var(--b);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:8px;transition:all .3s}
-.banner.reward{border-color:var(--gl);box-shadow:0 0 16px rgba(198,146,77,.35)}
+.hdr{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b);padding-bottom:6px}
+.hdr b{font-size:13px;letter-spacing:.3px;white-space:nowrap}
+.tag{font-size:10px;background:rgba(198,146,77,.15);color:var(--g);padding:2px 7px;border-radius:12px;border:1px solid rgba(198,146,77,.3);font-weight:600;white-space:nowrap}
+.banner{background:linear-gradient(145deg,#221B13,#14110E);border:1px solid var(--b);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:8px}
+.banner.rew{border-color:var(--gl);box-shadow:0 0 16px rgba(198,146,77,.35)}
 .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
-.cup{aspect-ratio:1;background:#100D0A;border:1px solid var(--b);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s ease;position:relative;overflow:hidden}
+.cup{aspect-ratio:1;background:#100D0A;border:1px solid var(--b);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden}
 .cup:active{transform:scale(.92)}
-.cup.on::before{content:'';position:absolute;left:0;right:0;bottom:0;height:100%;background:linear-gradient(180deg,rgba(230,195,135,.4) 0%,rgba(198,146,77,.25) 100%);border-radius:0 0 7px 7px;z-index:1;animation:liqRise .45s cubic-bezier(.2,.8,.3,1) forwards}
-@keyframes liqRise{from{transform:translateY(100%);opacity:.2}to{transform:translateY(0%);opacity:1}}
-.cup.on{border-color:var(--g);box-shadow:inset 0 -2px 8px rgba(198,146,77,.25),0 0 6px rgba(198,146,77,.2)}
+.cup.on::before{content:'';position:absolute;left:0;right:0;bottom:0;height:100%;background:linear-gradient(180deg,rgba(230,195,135,.4),rgba(198,146,77,.25));z-index:1;animation:liq .4s forwards}
+@keyframes liq{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.cup.on{border-color:var(--g);box-shadow:inset 0 -2px 8px rgba(198,146,77,.25)}
 .cup.rew{border-color:#E67E22;background:rgba(230,126,34,.12)}
-.cup.rew.on{border-color:#F1C40F;background:linear-gradient(145deg,rgba(243,156,18,.3),rgba(230,126,34,.35));box-shadow:0 0 14px rgba(241,196,15,.6),inset 0 0 8px rgba(241,196,15,.4);animation:starGlow 1.8s infinite alternate ease-in-out}
-@keyframes starGlow{0%{transform:scale(1);box-shadow:0 0 8px rgba(241,196,15,.4)}100%{transform:scale(1.05);box-shadow:0 0 16px rgba(241,196,15,.85)}}
-.cup svg{width:17px;height:17px;stroke:var(--m);fill:none;stroke-width:2;pointer-events:none;position:relative;z-index:2;transition:all .25s ease}
-.cup.on svg{stroke:var(--gl);fill:rgba(198,146,77,.4);filter:drop-shadow(0 0 2px rgba(198,146,77,.5))}
-.cup.rew.on svg{stroke:#FFF;fill:rgba(241,196,15,.8);filter:drop-shadow(0 0 3px #F1C40F)}
-.cup span{font-size:9px;color:var(--m);margin-top:1px;font-weight:600;pointer-events:none;position:relative;z-index:2;transition:all .25s ease}
+.cup.rew.on{border-color:#F1C40F;background:linear-gradient(145deg,rgba(243,156,18,.3),rgba(230,126,34,.35));box-shadow:0 0 12px rgba(241,196,15,.6);animation:glo 1.6s infinite alternate}
+@keyframes glo{0%{transform:scale(1)}100%{transform:scale(1.05)}}
+.cup svg{width:17px;height:17px;stroke:var(--m);fill:none;stroke-width:2;position:relative;z-index:2;pointer-events:none}
+.cup.on svg{stroke:var(--gl);fill:rgba(198,146,77,.4)}
+.cup.rew.on svg{stroke:#FFF;fill:rgba(241,196,15,.8)}
+.cup span{font-size:9px;color:var(--m);margin-top:1px;font-weight:600;position:relative;z-index:2;pointer-events:none}
 .cup.on span{color:var(--gl)}
-.pbar{width:100%;height:5px;background:#100D0A;border-radius:4px;overflow:hidden;position:relative}
-.pfill{height:100%;background:linear-gradient(90deg,var(--g),#F39C12,#F1C40F);width:0%;transition:width .4s cubic-bezier(.2,.8,.3,1);box-shadow:0 0 6px rgba(243,156,18,.4)}
-.desc{font-size:11.5px;color:var(--m);text-align:center;min-height:16px;transition:color .2s}
+.pbar{width:100%;height:5px;background:#100D0A;border-radius:4px;overflow:hidden}
+.pfill{height:100%;background:linear-gradient(90deg,var(--g),#F39C12,#F1C40F);width:0%;transition:width .4s}
+.desc{font-size:11.5px;color:var(--m);text-align:center;min-height:16px}
 .desc b{color:var(--gl)}
-.card{background:#120E0A;border:1px solid var(--b);border-radius:var(--r);padding:8px 10px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;touch-action:manipulation;transition:all .2s ease}
-.card:active{border-color:var(--g);background:#1A140E}
+.card{background:#120E0A;border:1px solid var(--b);border-radius:var(--r);padding:8px 10px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all .2s}
 .card.zoom{flex-direction:column;align-items:center;padding:14px 10px;gap:8px;border-color:var(--g);background:#18130E}
-.card.zoom .card-info{text-align:center;order:2}
-.card-lbl{font-size:9px;text-transform:uppercase;color:var(--m);font-weight:600}
-.card.zoom .card-lbl{display:none}
-.card-id{font-size:13px;font-weight:700;color:var(--t);font-family:monospace;letter-spacing:.6px}
-.card.zoom .card-id{font-size:16px;letter-spacing:1px;color:var(--gl)}
-.card-tip{font-size:10px;color:var(--m)}
-.qr{width:46px;height:46px;background:#FFF;border-radius:6px;padding:2px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;transition:all .2s ease}
+.card.zoom .cinfo{text-align:center;order:2}
+.clbl{font-size:9px;text-transform:uppercase;color:var(--m);font-weight:600}
+.card.zoom .clbl{display:none}
+.cid{font-size:13px;font-weight:700;color:var(--t);font-family:monospace;letter-spacing:.6px}
+.card.zoom .cid{font-size:16px;letter-spacing:1px;color:var(--gl)}
+.ctip{font-size:10px;color:var(--m)}
+.qr{width:46px;height:46px;background:#FFF;border-radius:6px;padding:2px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;transition:all .2s}
 .card.zoom .qr{width:160px;height:160px;padding:6px;border-radius:12px;order:1;box-shadow:0 0 22px rgba(198,146,77,.35)}
 .qr svg{width:100%;height:100%;display:block}
 .btns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.btn{background:var(--c);border:1px solid var(--g);color:var(--g);padding:8px 6px;border-radius:var(--r);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;touch-action:manipulation}
+.btn{background:var(--c);border:1px solid var(--g);color:var(--g);padding:8px 6px;border-radius:var(--r);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px}
 .btn.pri{background:linear-gradient(135deg,rgba(198,146,77,.3),rgba(142,96,42,.35));color:#FFF}
-.btn:active{transform:scale(.97)}
 </style>
 </head>
 <body>
@@ -59,80 +57,56 @@ body{background:var(--bg);color:var(--t);padding:10px;font-size:12px;line-height
   <div class="pbar"><div class="pfill" id="pfill"></div></div>
   <div class="desc" id="desc">Yuklanmoqda...</div>
 </div>
-<div class="card" id="card" title="Kattalashtirish yoki nusxa olish">
-  <div class="card-info">
-    <div class="card-lbl">Mijoz kodi (bosing - kattalashtiradi)</div>
-    <div class="card-id" id="cid">GC-••••••</div>
-    <div class="card-tip" id="ctip">Baristaga muhr uchun ko'rsating</div>
+<div class="card" id="card">
+  <div class="cinfo">
+    <div class="clbl">Mijoz kodi (bosing)</div>
+    <div class="cid" id="cid">GC-••••••</div>
+    <div class="ctip" id="ctip">Baristaga ko'rsating</div>
   </div>
   <div class="qr" id="qrBox"><!-- QR_SVG_PLACEHOLDER --></div>
 </div>
 <div class="btns">
   <button type="button" class="btn" id="zBtn">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-    <span id="ztxt">Katta QR-kod</span>
+    <span>🔍 Katta QR</span>
   </button>
   <button type="button" class="btn pri" id="mBtn">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-    <span>Menyu (Mini App)</span>
+    <span>☕️ Menyu</span>
   </button>
 </div>
 
 <script>
 (function(){
 var S={cups:0,total:6,mid:'GC-GUSTO',isZoom:false};
-function hap(t){try{if(window.TelegramWidget&&TelegramWidget.HapticFeedback){TelegramWidget.HapticFeedback.impactOccurred(t||'light')}else if(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.HapticFeedback){Telegram.WebApp.HapticFeedback.impactOccurred(t||'light')}}catch(e){}}
-function hapNotif(t){try{if(window.TelegramWidget&&TelegramWidget.HapticFeedback&&TelegramWidget.HapticFeedback.notificationOccurred){TelegramWidget.HapticFeedback.notificationOccurred(t)}else if(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.HapticFeedback&&Telegram.WebApp.HapticFeedback.notificationOccurred){Telegram.WebApp.HapticFeedback.notificationOccurred(t)}}catch(e){}}
-function setDesc(m,isGold){var e=document.getElementById('desc');e.innerHTML=m;if(isGold)e.style.color='#E6C387';setTimeout(function(){e.style.color=''},2500)}
+function hap(t,n){try{var h=(window.TelegramWidget&&TelegramWidget.HapticFeedback)||(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.HapticFeedback);if(h)n?h.notificationOccurred(n):h.impactOccurred(t||'light')}catch(e){}}
+function setDesc(m,g){var e=document.getElementById('desc');e.innerHTML=m;if(g)e.style.color='#E6C387';setTimeout(function(){e.style.color=''},2500)}
 function opn(u){hap('medium');try{if(window.TelegramWidget&&TelegramWidget.openLink){TelegramWidget.openLink(u);return}if(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.openLink){Telegram.WebApp.openLink(u);return}}catch(e){}window.open(u,'_blank')}
-function applyTheme(){var t=(window.TelegramWidget&&TelegramWidget.themeParams)||(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.themeParams);if(!t)return;var r=document.documentElement;if(t.bg_color)r.style.setProperty('--bg',t.bg_color);if(t.secondary_bg_color)r.style.setProperty('--c',t.secondary_bg_color);if(t.text_color)r.style.setProperty('--t',t.text_color);if(t.hint_color)r.style.setProperty('--m',t.hint_color);if(t.button_color)r.style.setProperty('--g',t.button_color)}
+function applyTheme(){var t=(window.TelegramWidget&&TelegramWidget.themeParams)||(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.themeParams);if(!t)return;var r=document.documentElement.style;if(t.bg_color)r.setProperty('--bg',t.bg_color);if(t.secondary_bg_color)r.setProperty('--c',t.secondary_bg_color);if(t.text_color)r.setProperty('--t',t.text_color);if(t.hint_color)r.setProperty('--m',t.hint_color);if(t.button_color)r.setProperty('--g',t.button_color)}
 applyTheme();if(window.TelegramWidget&&typeof TelegramWidget.onEvent==='function')TelegramWidget.onEvent('themeChanged',applyTheme);
 window.addEventListener('themeChanged',applyTheme);
+var sSVG='<svg viewBox="0 0 24 24"><polygon points="12 2 15 8 22 9 17 14 18 21 12 17 6 21 7 14 2 9 9 8 12 2"/></svg>',cSVG='<svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg>';
 function rnd(c,tot){
   var g=document.getElementById('grid');g.innerHTML='';c=Math.max(0,Math.min(tot,parseInt(c)||0));
   for(var i=1;i<=tot;i++){
     var d=document.createElement('div'),rew=(i===tot),on=(i<=c);
     d.className='cup'+(rew?' rew':'')+(on?' on':'');
-    d.innerHTML=rew?('<svg viewBox="0 0 24 24"><polygon points="12 2 15 8 22 9 17 14 18 21 12 17 6 21 7 14 2 9 9 8 12 2"/></svg><span>'+(on?'Tayyor!':'Sovg\'a')+'</span>'):('<svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg><span>'+i+'</span>');
-    (function(idx,f,r){d.onclick=function(){hap('light');setDesc(r?(f?'🎉 <b>Bepul qahvangiz tayyor!</b> Baristadan oling.':'🎁 6-kofe sovg\'a! Yana '+(tot-c)+' ta qoldi'):(f?'☕️ <b>'+idx+'-muhr hisoblangan!</b>':'⏳ '+idx+'-muhr: Qahva buyurtma qiling'),true)}})(i,on,rew);
+    d.innerHTML=rew?(sSVG+'<span>'+(on?'Tayyor!':'Sovg\'a')+'</span>'):(cSVG+'<span>'+i+'</span>');
+    (function(idx,f,r){d.onclick=function(){hap('light');setDesc(r?(f?'🎉 <b>Bepul qahvangiz tayyor!</b>':'🎁 6-kofe sovg\'a! Yana '+(tot-c)+' ta qoldi'):(f?'☕️ <b>'+idx+'-muhr hisoblangan!</b>':'⏳ '+idx+'-muhr: Qahva buyurtma qiling'),true)}})(i,on,rew);
     g.appendChild(d);
   }
   document.getElementById('pfill').style.width=((c/tot)*100)+'%';
   var de=document.getElementById('desc'),te=document.getElementById('tag'),bn=document.getElementById('banner');
-  if(c>=tot){de.innerHTML='🎉 <b>Tabriklaymiz!</b> Bepul qahvangiz tayyor!';te.textContent='Sovg\'a tayyor!';if(bn)bn.classList.add('reward');hapNotif('success')}
-  else if(c===0){de.innerHTML='Gusto Club: Har bir qahvada <b>1 muhr</b> oling.';te.textContent='6-chi kofe bepul';if(bn)bn.classList.remove('reward')}
-  else{de.innerHTML='Sizda <b>'+c+' ta</b> muhr bor. Yana <b>'+(tot-c)+' ta</b> qahvadan so\'ng sovg\'a!';te.textContent=c+' / '+tot+' muhr';if(bn)bn.classList.remove('reward')}
+  if(c>=tot){de.innerHTML='🎉 <b>Tabriklaymiz!</b> Bepul qahvangiz tayyor!';te.textContent='Sovg\'a tayyor!';if(bn)bn.classList.add('rew');hap(null,'success')}
+  else if(c===0){de.innerHTML='Gusto Club: Har bir qahvada <b>1 muhr</b> oling.';te.textContent='6-chi kofe bepul';if(bn)bn.classList.remove('rew')}
+  else{de.innerHTML='Sizda <b>'+c+' ta</b> muhr bor. Yana <b>'+(tot-c)+' ta</b> qoldi!';te.textContent=c+' / '+tot+' muhr';if(bn)bn.classList.remove('rew')}
 }
 function upd(d){if(!d)return;if(typeof d==='string'){try{d=JSON.parse(d)}catch(e){return}}if(typeof d.cups!=='undefined')S.cups=d.cups;if(typeof d.total!=='undefined')S.total=d.total;if(d.member_id){S.mid=d.member_id;document.getElementById('cid').textContent=d.member_id}rnd(S.cups,S.total)}
-
-if(window.TelegramWidget){
-  if(TelegramWidget.chatData)upd(TelegramWidget.chatData);
-  if(typeof TelegramWidget.onEvent==='function'){
-    TelegramWidget.onEvent('chatDataChanged',function(){if(TelegramWidget.chatData)upd(TelegramWidget.chatData)});
-  }
-}else{rnd(0,6)}
+if(window.TelegramWidget){if(TelegramWidget.chatData)upd(TelegramWidget.chatData);if(typeof TelegramWidget.onEvent==='function')TelegramWidget.onEvent('chatDataChanged',function(){if(TelegramWidget.chatData)upd(TelegramWidget.chatData)});}else{rnd(0,6)}
 window.addEventListener('chatDataChanged',function(){if(window.TelegramWidget&&TelegramWidget.chatData)upd(TelegramWidget.chatData)});
-
 function toggleZoom(){
-  hap('medium');
-  S.isZoom=!S.isZoom;
-  var cd=document.getElementById('card');
-  var zt=document.getElementById('ztxt');
-  var ct=document.getElementById('ctip');
-  if(S.isZoom){
-    cd.classList.add('zoom');
-    zt.textContent='Kichraytirish';
-    ct.textContent='Kichraytirish uchun bosing';
-    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(S.mid);
-    setDesc('🔍 QR-kod kattalashtirildi. Baristaga ko\'rsating',true);
-  }else{
-    cd.classList.remove('zoom');
-    zt.textContent='Katta QR-kod';
-    ct.textContent='Baristaga muhr uchun ko\'rsating';
-    setDesc('☕️ Gusto Coffee Club kartasi',false);
-  }
+  hap('medium');S.isZoom=!S.isZoom;var cd=document.getElementById('card'),zt=document.getElementById('ztxt'),ct=document.getElementById('ctip');
+  if(S.isZoom){cd.classList.add('zoom');zt.textContent='Kichraytirish';ct.textContent='Kichraytirish uchun bosing';if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(S.mid);setDesc('🔍 QR-kod kattalashtirildi. Baristaga ko\'rsating',true);}
+  else{cd.classList.remove('zoom');zt.textContent='🔍 Katta QR';ct.textContent='Baristaga ko\'rsating';setDesc('☕️ Gusto Coffee Club kartasi',false);}
 }
-
 document.getElementById('card').onclick=toggleZoom;
 document.getElementById('zBtn').onclick=toggleZoom;
 document.getElementById('mBtn').onclick=function(){opn('https://gustocoffee.uz/#menu')};

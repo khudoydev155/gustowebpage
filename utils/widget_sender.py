@@ -48,9 +48,9 @@ class WidgetService:
             try:
                 import segno
                 qr_data = f"https://t.me/gustobronbot?start=s_{chat_id}"
-                qr = segno.make(qr_data)
+                qr = segno.make(qr_data, error="l")
                 # omitsize=True produces viewBox without fixed width/height for responsive scaling
-                qr_svg = qr.svg_inline(omitsize=True, border=1, dark="#0C0A08", light="#FFFFFF")
+                qr_svg = qr.svg_inline(omitsize=True, border=1, dark="#000")
                 html = html.replace("<!-- QR_SVG_PLACEHOLDER -->", qr_svg)
             except Exception as ex:
                 logger.warning(f"Error generating dynamic QR SVG: {ex}")

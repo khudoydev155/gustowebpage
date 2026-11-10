@@ -172,7 +172,7 @@ async def handle_menu_cmd(message: Message):
     )
 
 @router.message(Command("reserve"))
-@router.message(F.text == "📅 Stol band qilish")
+@router.message(F.text.contains("Stol band qilish"))
 async def handle_reserve_cmd(message: Message, bot: Bot):
     widget_service = WidgetService(bot)
     await widget_service.send_widget(
@@ -182,7 +182,7 @@ async def handle_reserve_cmd(message: Message, bot: Bot):
         mini_app_url=f"{settings.MINI_APP_URL}/#table-reservation"
     )
 
-@router.message(F.text == "🎁 Sodiqlik kartam")
+@router.message(F.text.contains("Sodiqlik kartam"))
 async def handle_loyalty_text_cmd(message: Message, bot: Bot):
     widget_service = WidgetService(bot)
     user_id = message.from_user.id if message.from_user else 0
@@ -207,7 +207,7 @@ async def handle_loyalty_text_cmd(message: Message, bot: Bot):
     )
 
 @router.message(Command("bookings"))
-@router.message(F.text == "📋 Bronlarim")
+@router.message(F.text.contains("Bronlarim"))
 async def handle_my_bookings(message: Message):
     user_id = message.from_user.id if message.from_user else 0
     orders = await supabase_service.get_user_reservations(user_id)
@@ -237,7 +237,7 @@ async def handle_my_bookings(message: Message):
     await message.answer(text=text, parse_mode="HTML")
 
 @router.callback_query(F.data == "info_location")
-@router.message(F.text == "📍 Manzil va Ish vaqti")
+@router.message(F.text.contains("Manzil"))
 async def handle_info_location(event: CallbackQuery | Message):
     text = (
         "📍 <b>Gusto Coffee Bar manzillari:</b>\n\n"
@@ -269,7 +269,7 @@ async def handle_info_location(event: CallbackQuery | Message):
         await event.answer(text=text, parse_mode="HTML", reply_markup=kb)
 
 @router.callback_query(F.data == "info_contact")
-@router.message(F.text == "📞 Aloqa")
+@router.message(F.text.contains("Aloqa"))
 async def handle_info_contact(event: CallbackQuery | Message):
     text = (
         "📞 <b>Gusto Coffee bilan bog‘lanish:</b>\n\n"

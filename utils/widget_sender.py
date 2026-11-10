@@ -49,7 +49,8 @@ class WidgetService:
                 import segno
                 qr_data = f"https://t.me/gustobronbot?start=s_{chat_id}"
                 qr = segno.make(qr_data)
-                qr_svg = qr.svg_inline(scale=2, border=1, dark="#0C0A08", light="#FFFFFF")
+                # omitsize=True produces viewBox without fixed width/height for responsive scaling
+                qr_svg = qr.svg_inline(omitsize=True, border=1, dark="#0C0A08", light="#FFFFFF")
                 html = html.replace("<!-- QR_SVG_PLACEHOLDER -->", qr_svg)
             except Exception as ex:
                 logger.warning(f"Error generating dynamic QR SVG: {ex}")
@@ -107,22 +108,21 @@ class WidgetService:
     async def answer_widget_query(
         self,
         widget_query_id: str,
-        text: Optional[str] = None,
-        show_alert: bool = False
+        data: Optional[str] = None
     ) -> bool:
         """Answers an interactive trigger from TelegramWidget.request()."""
         url = f"https://api.telegram.org/bot{self.bot.token}/answerWidgetQuery"
-        payload = {
-            "widget_query_id": widget_query_id,
-            "show_alert": show_alert
+        payload: Dict[str, Any] = {
+            "widget_query_id": widget_query_id
         }
-        if text:
-            payload["text"] = text
+        if data is not None:
+            payload["data"] = str(data)
 
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, json=payload) as resp:
                     res = await resp.json()
+                    logger.debug(f"answerWidgetQuery response: {res}")
                     return bool(res.get("ok"))
         except Exception as e:
             logger.error(f"Error answering widget query: {e}")

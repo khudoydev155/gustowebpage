@@ -23,21 +23,28 @@ class WidgetQueryMiddleware(BaseMiddleware):
     """
     async def __call__(self, handler, event: Update, data: dict):
         bot: Bot = data.get("bot")
-        # Check if raw update contains widget_query or shared_widget_query
-        raw_dict = event.model_dump(by_alias=True)
-        extra = getattr(event, "__pydantic_extra__", {}) or {}
 
-        wq = raw_dict.get("widget_query") or extra.get("widget_query")
+        # Check for widget_query
+        wq = getattr(event, "widget_query", None) or (event.model_extra or {}).get("widget_query")
+        if not wq:
+            raw_dict = event.model_dump(by_alias=True)
+            wq = raw_dict.get("widget_query")
+
         if wq:
-            logger.info("WidgetQueryMiddleware intercepted widget_query")
+            logger.info(f"WidgetQueryMiddleware intercepted widget_query: {wq}")
             await widgets.process_raw_widget_query(bot, wq)
-            return
+            return True
 
-        swq = raw_dict.get("shared_widget_query") or extra.get("shared_widget_query")
+        # Check for shared_widget_query
+        swq = getattr(event, "shared_widget_query", None) or (event.model_extra or {}).get("shared_widget_query")
+        if not swq:
+            raw_dict = event.model_dump(by_alias=True)
+            swq = raw_dict.get("shared_widget_query")
+
         if swq:
-            logger.info("WidgetQueryMiddleware intercepted shared_widget_query")
+            logger.info(f"WidgetQueryMiddleware intercepted shared_widget_query: {swq}")
             await widgets.process_raw_widget_query(bot, swq)
-            return
+            return True
 
         return await handler(event, data)
 

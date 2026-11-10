@@ -8,9 +8,9 @@
 :root{--bg:#0C0A08;--c:#181410;--b:#2C241C;--g:#C6924D;--gl:#E6C387;--t:#F5F1EA;--m:#A89F91;--r:10px}
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent;user-select:none}
 body{background:var(--bg);color:var(--t);padding:10px;font-size:12px;line-height:1.3;display:flex;flex-direction:column;gap:8px}
-.hdr{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b);padding-bottom:6px}
-.hdr b{font-size:13px;color:var(--t);letter-spacing:.3px}
-.tag{font-size:10px;background:rgba(198,146,77,.15);color:var(--g);padding:2px 7px;border-radius:12px;border:1px solid rgba(198,146,77,.3);font-weight:600}
+.hdr{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b);padding-bottom:6px;gap:8px}
+.hdr b{font-size:13px;color:var(--t);letter-spacing:.3px;white-space:nowrap}
+.tag{font-size:10px;background:rgba(198,146,77,.15);color:var(--g);padding:2px 7px;border-radius:12px;border:1px solid rgba(198,146,77,.3);font-weight:600;white-space:nowrap;flex-shrink:0}
 .banner{background:linear-gradient(145deg,#221B13,#14110E);border:1px solid var(--b);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:8px}
 .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
 .cup{aspect-ratio:1;background:#100D0A;border:1px solid var(--b);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:.15s}
@@ -31,8 +31,8 @@ body{background:var(--bg);color:var(--t);padding:10px;font-size:12px;line-height
 .card:active{border-color:var(--g);background:#1A140E}
 .card-lbl{font-size:9px;text-transform:uppercase;color:var(--m);font-weight:600}
 .card-id{font-size:13px;font-weight:700;color:var(--t);font-family:monospace;letter-spacing:.6px}
-.qr{width:46px;height:46px;background:#FFF;border-radius:6px;padding:3px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
-.qr svg{width:100%;height:100%}
+.qr{width:46px;height:46px;background:#FFF;border-radius:6px;padding:2px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.qr svg{width:100%;height:100%;display:block}
 .btns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .btn{background:var(--c);border:1px solid var(--g);color:var(--g);padding:8px 6px;border-radius:var(--r);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;touch-action:manipulation}
 .btn.pri{background:linear-gradient(135deg,rgba(198,146,77,.3),rgba(142,96,42,.35));color:#FFF}
@@ -90,10 +90,43 @@ function rnd(c,tot){
   else{de.innerHTML='Sizda <b>'+c+' ta</b> muhr bor. Yana <b>'+(tot-c)+' ta</b> qahvadan so\'ng sovg\'a!';te.textContent=c+' / '+tot+' muhr'}
 }
 function upd(d){if(!d)return;if(typeof d==='string'){try{d=JSON.parse(d)}catch(e){return}}if(typeof d.cups!=='undefined')S.cups=d.cups;if(typeof d.total!=='undefined')S.total=d.total;if(d.member_id){S.mid=d.member_id;document.getElementById('cid').textContent=d.member_id}rnd(S.cups,S.total)}
-if(window.TelegramWidget&&TelegramWidget.chatData){upd(TelegramWidget.chatData)}else{rnd(0,6)}
+
+if(window.TelegramWidget){
+  if(TelegramWidget.chatData)upd(TelegramWidget.chatData);
+  if(typeof TelegramWidget.onEvent==='function'){
+    TelegramWidget.onEvent('chatDataChanged',function(){if(TelegramWidget.chatData)upd(TelegramWidget.chatData)});
+  }
+}else{rnd(0,6)}
 window.addEventListener('chatDataChanged',function(){if(window.TelegramWidget&&TelegramWidget.chatData)upd(TelegramWidget.chatData)});
-document.getElementById('card').onclick=function(){hap('medium');if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(S.mid);setDesc('✅ Kod nusxa olindi: '+S.mid+' (Baristaga ko\'rsating)',true)};
-document.getElementById('rBtn').onclick=function(){hap('light');document.getElementById('rtxt').textContent='...';if(window.TelegramWidget&&TelegramWidget.request)TelegramWidget.request('loyalty:refresh');setTimeout(function(){document.getElementById('rtxt').textContent='Yangilash';setDesc('☕️ Balans yangilandi!',true)},900)};
+
+document.getElementById('card').onclick=function(){
+  hap('medium');
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(S.mid);
+  setDesc('✅ Kod nusxa olindi: '+S.mid+' (Baristaga ko\'rsating)',true);
+};
+
+document.getElementById('rBtn').onclick=function(){
+  hap('light');
+  var rt=document.getElementById('rtxt');
+  rt.textContent='...';
+  if(window.TelegramWidget&&typeof TelegramWidget.request==='function'){
+    try{
+      TelegramWidget.request('loyalty:refresh').then(function(res){
+        rt.textContent='Yangilash';
+        setDesc('☕️ Balans yangilandi!',true);
+        if(res)upd(res);
+      }).catch(function(){
+        rt.textContent='Yangilash';
+        setDesc('☕️ Balans yangilandi!',true);
+      });
+    }catch(e){
+      rt.textContent='Yangilash';
+      setDesc('☕️ Balans yangilandi!',true);
+    }
+  }else{
+    setTimeout(function(){rt.textContent='Yangilash';setDesc('☕️ Balans yangilandi!',true)},700);
+  }
+};
 document.getElementById('mBtn').onclick=function(){opn('https://gustocoffee.uz/#menu')};
 })();
 </script>

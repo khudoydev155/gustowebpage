@@ -79,10 +79,17 @@ async def process_raw_widget_query(bot: Bot, widget_query: dict):
             guests=guests
         )
 
-        # 2. Answer widget query with confirmation toast
+        # 2. Answer widget query with confirmation data
+        res_payload = json.dumps({
+            "status": "confirmed",
+            "booking_code": booking_code,
+            "day": day,
+            "time": time_slot,
+            "guests": guests
+        })
         await widget_service.answer_widget_query(
             widget_query_id=query_id,
-            text=f"✅ {day_text} {time_slot} ga joy bron qilindi! Kod: #{booking_code}"
+            data=res_payload
         )
 
         # 3. Update widget UI state in chat
@@ -100,10 +107,11 @@ async def process_raw_widget_query(bot: Bot, widget_query: dict):
             )
 
         # 4. Notify Admin / Barista Group
+        user_info = f"{user_name}" + (f" (@{username})" if username else "")
         admin_alert = (
-            "🔔 <b>YANGI STOL BAND QILINDI (HTML Widget)</b>\n\n"
+            "🔔 <b>YANGI STOL BAND QILINDI (HTML Vidjet)</b>\n\n"
             f"🔖 <b>Bron kodi:</b> <code>#{booking_code}</code>\n"
-            f"👤 <b>Mehmon:</b> {user_name} (@{username})\n"
+            f"👤 <b>Mehmon:</b> {user_info}\n"
             f"📅 <b>Kuni:</b> {day_text}\n"
             f"⏰ <b>Vaqt:</b> {time_slot}\n"
             f"👥 <b>Mehmonlar soni:</b> {guests} kishi\n"
@@ -131,7 +139,7 @@ async def process_raw_widget_query(bot: Bot, widget_query: dict):
         # 1. Answer widget query
         await widget_service.answer_widget_query(
             widget_query_id=query_id,
-            text=f"Balansingiz: {cups}/6 muhr!"
+            data=json.dumps({"cups": cups, "member_id": member_id})
         )
 
         # 2. Update widget UI with latest data
@@ -149,5 +157,5 @@ async def process_raw_widget_query(bot: Bot, widget_query: dict):
     else:
         await widget_service.answer_widget_query(
             widget_query_id=query_id,
-            text="Qabul qilindi!"
+            data="{}"
         )

@@ -374,3 +374,17 @@ async def handle_web_app_data(message: Message, bot: Bot):
     except Exception as e:
         logger.error(f"Error processing WebApp data: {e}")
         await message.answer("Ma'lumotlar qabul qilindi. Tez orada siz bilan bog'lanamiz!")
+
+@router.message()
+async def handle_default_fallback(message: Message):
+    text = (
+        "☕️ <b>Gusto Coffee Bot</b> xizmatidasiz!\n\n"
+        "Quyidagi menyu tugmalaridan birini tanlashingiz mumkin:\n\n"
+        "• ☕️ <b>Qahva menyusi</b> — Ichimliklar ro'yxati\n"
+        "• 📅 <b>Stol band qilish</b> — Qulay vaqtga joy bron qilish\n"
+        "• 🎁 <b>Sodiqlik kartam</b> — Muhrlaringiz va bepul kofe\n"
+        "• 📋 <b>Bronlarim</b> — Faol buyurtmalaringiz\n"
+        "• 📍 <b>Manzil va Ish vaqti</b> — Filial joylashuvi\n"
+        "• 📞 <b>Aloqa</b> — Biz bilan bog'lanish"
+    )
+    await message.answer(text=text, parse_mode="HTML", reply_markup=get_reply_main_menu())

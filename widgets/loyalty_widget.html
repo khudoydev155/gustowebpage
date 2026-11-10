@@ -5,26 +5,30 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <title>Gusto Club</title>
 <style>
-:root{--bg:#0C0A08;--c:#181410;--b:#2C241C;--g:#C6924D;--gl:#E6C387;--t:#F5F1EA;--m:#A89F91;--r:10px}
+:root{--bg:var(--tg-theme-bg-color,#0C0A08);--c:var(--tg-theme-secondary-bg-color,#181410);--b:#2C241C;--g:var(--tg-theme-button-color,#C6924D);--gl:#E6C387;--t:var(--tg-theme-text-color,#F5F1EA);--m:var(--tg-theme-hint-color,#A89F91);--r:10px}
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent;user-select:none}
 body{background:var(--bg);color:var(--t);padding:10px;font-size:12px;line-height:1.3;display:flex;flex-direction:column;gap:8px}
 .hdr{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b);padding-bottom:6px;gap:8px}
 .hdr b{font-size:13px;color:var(--t);letter-spacing:.3px;white-space:nowrap}
 .tag{font-size:10px;background:rgba(198,146,77,.15);color:var(--g);padding:2px 7px;border-radius:12px;border:1px solid rgba(198,146,77,.3);font-weight:600;white-space:nowrap;flex-shrink:0}
-.banner{background:linear-gradient(145deg,#221B13,#14110E);border:1px solid var(--b);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:8px}
+.banner{background:linear-gradient(145deg,#221B13,#14110E);border:1px solid var(--b);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:8px;transition:all .3s}
+.banner.reward{border-color:var(--gl);box-shadow:0 0 16px rgba(198,146,77,.35)}
 .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
-.cup{aspect-ratio:1;background:#100D0A;border:1px solid var(--b);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:.15s}
+.cup{aspect-ratio:1;background:#100D0A;border:1px solid var(--b);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s ease;position:relative;overflow:hidden}
 .cup:active{transform:scale(.92)}
-.cup.on{background:rgba(198,146,77,.2);border-color:var(--g)}
-.cup.rew{border-color:#E67E22;background:rgba(230,126,34,.15)}
-.cup.rew.on{background:rgba(243,156,18,.3);border-color:#F39C12}
-.cup svg{width:17px;height:17px;stroke:var(--m);fill:none;stroke-width:2;pointer-events:none}
-.cup.on svg{stroke:var(--g);fill:rgba(198,146,77,.35)}
-.cup.rew.on svg{stroke:#F1C40F;fill:rgba(241,196,15,.5)}
-.cup span{font-size:9px;color:var(--m);margin-top:1px;font-weight:600;pointer-events:none}
+.cup.on::before{content:'';position:absolute;left:0;right:0;bottom:0;height:100%;background:linear-gradient(180deg,rgba(230,195,135,.4) 0%,rgba(198,146,77,.25) 100%);border-radius:0 0 7px 7px;z-index:1;animation:liqRise .45s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes liqRise{from{transform:translateY(100%);opacity:.2}to{transform:translateY(0%);opacity:1}}
+.cup.on{border-color:var(--g);box-shadow:inset 0 -2px 8px rgba(198,146,77,.25),0 0 6px rgba(198,146,77,.2)}
+.cup.rew{border-color:#E67E22;background:rgba(230,126,34,.12)}
+.cup.rew.on{border-color:#F1C40F;background:linear-gradient(145deg,rgba(243,156,18,.3),rgba(230,126,34,.35));box-shadow:0 0 14px rgba(241,196,15,.6),inset 0 0 8px rgba(241,196,15,.4);animation:starGlow 1.8s infinite alternate ease-in-out}
+@keyframes starGlow{0%{transform:scale(1);box-shadow:0 0 8px rgba(241,196,15,.4)}100%{transform:scale(1.05);box-shadow:0 0 16px rgba(241,196,15,.85)}}
+.cup svg{width:17px;height:17px;stroke:var(--m);fill:none;stroke-width:2;pointer-events:none;position:relative;z-index:2;transition:all .25s ease}
+.cup.on svg{stroke:var(--gl);fill:rgba(198,146,77,.4);filter:drop-shadow(0 0 2px rgba(198,146,77,.5))}
+.cup.rew.on svg{stroke:#FFF;fill:rgba(241,196,15,.8);filter:drop-shadow(0 0 3px #F1C40F)}
+.cup span{font-size:9px;color:var(--m);margin-top:1px;font-weight:600;pointer-events:none;position:relative;z-index:2;transition:all .25s ease}
 .cup.on span{color:var(--gl)}
-.pbar{width:100%;height:4px;background:#100D0A;border-radius:4px;overflow:hidden}
-.pfill{height:100%;background:linear-gradient(90deg,var(--g),#F39C12);width:0%;transition:width .3s}
+.pbar{width:100%;height:5px;background:#100D0A;border-radius:4px;overflow:hidden;position:relative}
+.pfill{height:100%;background:linear-gradient(90deg,var(--g),#F39C12,#F1C40F);width:0%;transition:width .4s cubic-bezier(.2,.8,.3,1);box-shadow:0 0 6px rgba(243,156,18,.4)}
 .desc{font-size:11.5px;color:var(--m);text-align:center;min-height:16px;transition:color .2s}
 .desc b{color:var(--gl)}
 .card{background:#120E0A;border:1px solid var(--b);border-radius:var(--r);padding:8px 10px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;touch-action:manipulation;transition:all .2s ease}
@@ -50,7 +54,7 @@ body{background:var(--bg);color:var(--t);padding:10px;font-size:12px;line-height
   <b>☕️ Gusto Coffee Club</b>
   <span class="tag" id="tag">6-chi kofe bepul</span>
 </div>
-<div class="banner">
+<div class="banner" id="banner">
   <div class="grid" id="grid"></div>
   <div class="pbar"><div class="pfill" id="pfill"></div></div>
   <div class="desc" id="desc">Yuklanmoqda...</div>
@@ -78,6 +82,7 @@ body{background:var(--bg);color:var(--t);padding:10px;font-size:12px;line-height
 (function(){
 var S={cups:0,total:6,mid:'GC-GUSTO',isZoom:false};
 function hap(t){try{if(window.TelegramWidget&&TelegramWidget.HapticFeedback){TelegramWidget.HapticFeedback.impactOccurred(t||'light')}else if(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.HapticFeedback){Telegram.WebApp.HapticFeedback.impactOccurred(t||'light')}}catch(e){}}
+function hapNotif(t){try{if(window.TelegramWidget&&TelegramWidget.HapticFeedback&&TelegramWidget.HapticFeedback.notificationOccurred){TelegramWidget.HapticFeedback.notificationOccurred(t)}else if(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.HapticFeedback&&Telegram.WebApp.HapticFeedback.notificationOccurred){Telegram.WebApp.HapticFeedback.notificationOccurred(t)}}catch(e){}}
 function setDesc(m,isGold){var e=document.getElementById('desc');e.innerHTML=m;if(isGold)e.style.color='#E6C387';setTimeout(function(){e.style.color=''},2500)}
 function opn(u){hap('medium');try{if(window.TelegramWidget&&TelegramWidget.openLink){TelegramWidget.openLink(u);return}if(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.openLink){Telegram.WebApp.openLink(u);return}}catch(e){}window.open(u,'_blank')}
 function rnd(c,tot){
@@ -90,10 +95,10 @@ function rnd(c,tot){
     g.appendChild(d);
   }
   document.getElementById('pfill').style.width=((c/tot)*100)+'%';
-  var de=document.getElementById('desc'),te=document.getElementById('tag');
-  if(c>=tot){de.innerHTML='🎉 <b>Tabriklaymiz!</b> Bepul qahvangiz tayyor!';te.textContent='Sovg\'a tayyor!'}
-  else if(c===0){de.innerHTML='Gusto Club: Har bir qahvada <b>1 muhr</b> oling.';te.textContent='6-chi kofe bepul'}
-  else{de.innerHTML='Sizda <b>'+c+' ta</b> muhr bor. Yana <b>'+(tot-c)+' ta</b> qahvadan so\'ng sovg\'a!';te.textContent=c+' / '+tot+' muhr'}
+  var de=document.getElementById('desc'),te=document.getElementById('tag'),bn=document.getElementById('banner');
+  if(c>=tot){de.innerHTML='🎉 <b>Tabriklaymiz!</b> Bepul qahvangiz tayyor!';te.textContent='Sovg\'a tayyor!';if(bn)bn.classList.add('reward');hapNotif('success')}
+  else if(c===0){de.innerHTML='Gusto Club: Har bir qahvada <b>1 muhr</b> oling.';te.textContent='6-chi kofe bepul';if(bn)bn.classList.remove('reward')}
+  else{de.innerHTML='Sizda <b>'+c+' ta</b> muhr bor. Yana <b>'+(tot-c)+' ta</b> qahvadan so\'ng sovg\'a!';te.textContent=c+' / '+tot+' muhr';if(bn)bn.classList.remove('reward')}
 }
 function upd(d){if(!d)return;if(typeof d==='string'){try{d=JSON.parse(d)}catch(e){return}}if(typeof d.cups!=='undefined')S.cups=d.cups;if(typeof d.total!=='undefined')S.total=d.total;if(d.member_id){S.mid=d.member_id;document.getElementById('cid').textContent=d.member_id}rnd(S.cups,S.total)}
 

@@ -60,8 +60,8 @@ def get_main_menu_keyboard() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="☕️ Qahva menyusi (Mini App)",
-                    web_app=WebAppInfo(url=menu_url)
+                    text="☕️ Qahva menyusi (Vidjet)",
+                    callback_data="send_menu_widget"
                 ),
                 InlineKeyboardButton(
                     text="🌐 Gusto vebsayt",
@@ -167,23 +167,17 @@ async def handle_start(message: Message, command: CommandObject, bot: Bot):
     )
 
 @router.message(Command("menu"))
-async def handle_menu_cmd(message: Message):
-    menu_url = f"{settings.MINI_APP_URL}/#menu"
-    await message.answer(
-        text="☕️ <b>Gusto Coffee menyusi:</b>\nIchimliklar va qahvalar bilan tanishing.",
-        parse_mode="HTML",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="☕️ Menyu (Mini App)",
-                    web_app=WebAppInfo(url=menu_url)
-                ),
-                InlineKeyboardButton(
-                    text="🌐 Vebsayt",
-                    web_app=WebAppInfo(url=settings.MINI_APP_URL)
-                )
-            ]
-        ])
+@router.callback_query(F.data == "send_menu_widget")
+async def handle_menu_cmd(event: Message | CallbackQuery, bot: Bot):
+    chat_id = event.chat.id if isinstance(event, Message) else event.message.chat.id
+    if isinstance(event, CallbackQuery):
+        await event.answer()
+    widget_service = WidgetService(bot)
+    await widget_service.send_widget(
+        chat_id=chat_id,
+        widget_filename="menu_widget.html",
+        initial_chat_data={"cat": "all"},
+        mini_app_url=f"{settings.MINI_APP_URL}/#menu"
     )
 
 @router.message(Command("reserve"))

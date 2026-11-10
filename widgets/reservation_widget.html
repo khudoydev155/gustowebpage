@@ -100,6 +100,9 @@ var S={day:'bugun',time:'18:00',guests:2},cdT=null;
 function hap(t){try{if(window.TelegramWidget&&TelegramWidget.HapticFeedback){TelegramWidget.HapticFeedback.impactOccurred(t||'light')}else if(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.HapticFeedback){Telegram.WebApp.HapticFeedback.impactOccurred(t||'light')}}catch(e){}}
 function hapNotif(t){try{if(window.TelegramWidget&&TelegramWidget.HapticFeedback&&TelegramWidget.HapticFeedback.notificationOccurred){TelegramWidget.HapticFeedback.notificationOccurred(t)}else if(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.HapticFeedback&&Telegram.WebApp.HapticFeedback.notificationOccurred){Telegram.WebApp.HapticFeedback.notificationOccurred(t)}}catch(e){}}
 function opn(u){hap('medium');try{if(window.TelegramWidget&&TelegramWidget.openLink){TelegramWidget.openLink(u);return}if(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.openLink){Telegram.WebApp.openLink(u);return}}catch(e){}window.open(u,'_blank')}
+function applyTheme(){var t=(window.TelegramWidget&&TelegramWidget.themeParams)||(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.themeParams);if(!t)return;var r=document.documentElement;if(t.bg_color)r.style.setProperty('--bg',t.bg_color);if(t.secondary_bg_color)r.style.setProperty('--c',t.secondary_bg_color);if(t.text_color)r.style.setProperty('--t',t.text_color);if(t.hint_color)r.style.setProperty('--m',t.hint_color);if(t.button_color)r.style.setProperty('--g',t.button_color)}
+applyTheme();if(window.TelegramWidget&&typeof TelegramWidget.onEvent==='function')TelegramWidget.onEvent('themeChanged',applyTheme);
+window.addEventListener('themeChanged',applyTheme);
 var pills=document.querySelectorAll('.pill');
 pills.forEach(function(p){p.onclick=function(){hap('light');pills.forEach(function(x){x.classList.remove('on')});p.classList.add('on');S.day=p.getAttribute('data-d')}});
 var chips=document.querySelectorAll('.chip');

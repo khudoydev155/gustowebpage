@@ -1,0 +1,11 @@
+services:
+  gusto-bot:
+    build: .
+    container_name: gusto_coffee_bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./widgets:/app/widgets:ro

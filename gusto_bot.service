@@ -1,0 +1,19 @@
+[Unit]
+Description=Gusto Coffee Telegram Bot (aiogram 3 + HTML Widgets)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/gusto-telegram-bot
+ExecStart=/var/www/gusto-telegram-bot/venv/bin/python main.py
+Restart=always
+RestartSec=5
+EnvironmentFile=/var/www/gusto-telegram-bot/.env
+
+# Security sandbox
+ProtectSystem=full
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
